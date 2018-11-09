@@ -261,7 +261,6 @@ unsigned char* process_http_get(char* message)
 					coap_index++;
 				}
 				for(int m = 0; m < current_part_length; m++) {
-					printf("index: %d, char: %c\n", url_index, url[url_index]);
 					coap_get[coap_index] = url[url_index];
 					url_index++;
 					coap_index++;
