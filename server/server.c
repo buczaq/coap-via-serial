@@ -23,6 +23,11 @@ int main(int argc, char *argv[])
 		http_message = listen_for_http(hostname, portname);
 		coap_message = http_to_coap(http_message);
 		coap_message_with_header = create_message_with_header(coap_message);
+		printf("Sending:\n");
+		for(int i = 0; i < 25; i++) {
+			printf("%d ", coap_message_with_header[i]);
+		}
+		printf("\n");
 		send_coap_to_port(coap_message_with_header);
 //	}
 }
