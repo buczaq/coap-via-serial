@@ -13,27 +13,14 @@
 
 #include "functions.h"
 
-bool open_device(int* fd, const char* device)
-{
-	*fd = open(device,O_RDWR | O_NOCTTY);
-	if(*fd > 0) {
-		printf("\nDevice %s opened successfully\n", device);
-		return true;
-	}
-	else {
-		printf("\nError in opening device, aborting...\n");
-		return false;
-	}
-}
-
 unsigned char* create_message_with_header(const char* buffer)
 {
-	unsigned char* message_with_header = malloc(sizeof(unsigned char) * 256);
-	unsigned int coap_size = strlen(buffer);
+	unsigned char* message_with_header = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned int coap_size = count_actual_buffer_size(buffer);
 	message_with_header[0] = 0xa1;
 
 	unsigned int ext_len_index = 0;
-	if(coap_size > 255) {
+	if(coap_size > BUFFER_SIZE - 1) {
 		message_with_header[++ext_len_index] = 0x00;
 		message_with_header[++ext_len_index] = (coap_size & 0xff00) >> 8;
 		message_with_header[++ext_len_index] = (coap_size & 0x00ff);
@@ -53,58 +40,63 @@ unsigned char* create_message_with_header(const char* buffer)
 	}
 	message_with_header[coap_size + ext_len_index] = '\0';
 
-	for(int i = 0; i < coap_size + 6; i++) {
-		printf("%d ", message_with_header[i]);
-	}
 	return message_with_header;
 }
 
-bool send_data(int fd)
+unsigned int count_actual_buffer_size(unsigned char* buffer)
 {
-	unsigned char write_buffer[32] = {"\0"};
-	scanf("%s", write_buffer);
-	int bytes_written = 0;
-
-	unsigned char* message_with_header = create_message_with_header(write_buffer);
-
-	bytes_written = write(fd, message_with_header, sizeof(write_buffer) + 6);
-
-	printf("\n +----------------------------------+\n");
-	return (bytes_written > 0);
-}
-
-bool receive_data(int fd)
-{
-	tcflush(fd, TCIFLUSH);
-
-	unsigned char read_buffer[32];
-	int bytes_read = 0;
-	int i = 0;
-
-	bytes_read = read(fd, &read_buffer, 32);
-	unsigned int length = 0;
-	int source[2] = { 0 };
-	int destination[2] = { 0 };
-	if(read_buffer[0] == 0xa1) {
-		length = (unsigned int)read_buffer[1];
-		source[0] = (unsigned int)read_buffer[2];
-		source[1] = (unsigned int)read_buffer[3];
-		destination[0] = (unsigned int)read_buffer[4];
-		destination[1] = (unsigned int)read_buffer[5];
+	unsigned int size = 0;
+	while(buffer[size] != '\0') {
+		size++;
 	}
 
-	for(i = 0; i < length; i++) {
-		printf("%c", read_buffer[i + 6]);
-	}
-	printf("\nSource: %d.%d\nDestination: %d.%d", source[0], source[1], destination[0], destination[1]);
-	
-	printf("\n +----------------------------------+\n");
+	return size + 1;
 }
 
-unsigned char* receive_udp_datagram()
+unsigned int count_whole_message_size(unsigned char* buffer)
+{
+	unsigned int size = 0;
+	if(buffer[1] != '\0') {
+		size = 8;
+	} else {
+		size = 6;
+	}
+	while(buffer[size] != '\0') {
+		size++;
+	}
+
+	return size + 1;
+}
+
+bool send_coap_to_port(unsigned char* buffer)
 {
 	const char* hostname = "0.0.0.0";
-	const char* portname = "8000";
+	const char* portname = "9001";
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+	struct addrinfo* res = 0;
+	int err=getaddrinfo(hostname, portname, &hints, &res);
+	if (err!=0) {
+		printf("failed to resolve local socket address (err = %d)",err);
+	}
+	int sckt = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (sckt == -1) {
+    	printf("failed to create address (err = %d)",err);
+	}
+	connect(sckt, res->ai_addr, res->ai_addrlen);
+	write(sckt, buffer, count_whole_message_size(buffer));
+
+	return true;
+}
+
+unsigned char* listen_for_http(const char* host, const char* port)
+{
+	unsigned char* buffer = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	const char* hostname = host;
+	const char* portname = port;
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
@@ -124,41 +116,19 @@ unsigned char* receive_udp_datagram()
     	printf("failed to bind (err = %d)",err);
 	}
 
-	unsigned char buffer[549] = { '\0' };
 	struct sockaddr_storage src_addr;
 	socklen_t src_addr_len=sizeof(src_addr);
-	ssize_t count=recvfrom(sckt, buffer,sizeof(buffer), 0, (struct sockaddr*)&src_addr,&src_addr_len);
+	ssize_t count = recvfrom(sckt, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&src_addr,&src_addr_len);
 	if (count == -1) {
 		printf("%s",strerror(errno));
 	} else if (count==sizeof(buffer)) {
 		printf("datagram too large for buffer: truncated");
 	} else {
-		for(int i = 0; i < sizeof(buffer); i++) printf("%c", buffer[i]);
+		printf("\nSucessfully received message\n");
 	}
 
 	freeaddrinfo(res);
-
-	const char* desthostname = "0.0.0.0";
-	const char* destportname = "9001";
-	struct addrinfo desthints;
-	memset(&desthints, 0, sizeof(desthints));
-	desthints.ai_family = AF_UNSPEC;
-	desthints.ai_socktype = SOCK_STREAM;
-	desthints.ai_protocol = 0;
-	struct addrinfo* destres = 0;
-	int desterr=getaddrinfo(desthostname, destportname, &desthints, &destres);
-	if (desterr!=0) {
-		printf("failed to resolve local socket address (err = %d)",desterr);
-	}
-	int destsckt = socket(destres->ai_family,destres->ai_socktype,destres->ai_protocol);
-	if (destsckt == -1) {
-    	printf("failed to create address (err = %d)",desterr);
-	}
-	connect(destsckt, destres->ai_addr, destres->ai_addrlen);
-	char* send_buffer = http_to_coap(buffer);
-	write(destsckt, send_buffer, 255);
-
-	return '5';
+	return buffer;
 }
 
 MessageType recognize_http_message_type(char* http_message)
@@ -193,7 +163,7 @@ unsigned char* http_to_coap(char* http_message)
 
 unsigned char* process_http_get(char* message)
 {
-	unsigned char* coap_get = malloc(sizeof(unsigned char) * 256);
+	unsigned char* coap_get = malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
 	//assuming no token
 	coap_get[0] = 64; // CoAP version 1, confirmable, no token
@@ -212,7 +182,6 @@ unsigned char* process_http_get(char* message)
 	bool time_to_break = false;
 	// workaround! FIXME
 	while(!time_to_break) {
-		printf("-%c-", message[i]);
 		url[i - 4] = message[i];
 		//printf("%c", message[i])
 		i++;
@@ -238,7 +207,6 @@ unsigned char* process_http_get(char* message)
 				}
 				host_is_specified = true;
 				for(int m = 0; m < current_part_length; m++) {
-					printf("index: %d, char: %c\n", url_index, url[url_index]);
 					coap_get[coap_index] = url[url_index];
 					url_index++;
 					coap_index++;
@@ -271,17 +239,16 @@ unsigned char* process_http_get(char* message)
 			url_index++;
 		}
 	}
-	//debug
-	for(int i = 0; i < 255; i++)
-		printf("%d ", coap_get[i]);
+
 	return coap_get;
 }
 
 // TODO
 unsigned char* process_http_post(char* message)
 {
-	return 'x';
+	return "dummy";
 }
+
 
 //2 params(uart) 4 bytes per value --rs-> 
 
