@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	SerialPortSettings.c_cflag &= ~PARENB;
 	SerialPortSettings.c_cflag &= ~CSTOPB;
 	SerialPortSettings.c_cflag &= ~CSIZE;
-	SerialPortSettings.c_cflag |=CS8;
+	SerialPortSettings.c_cflag |= CS8;
 
 	SerialPortSettings.c_cflag &= ~CRTSCTS;
 	SerialPortSettings.c_cflag |= CREAD | CLOCAL;
@@ -42,11 +42,20 @@ int main(int argc, char *argv[])
 	SerialPortSettings.c_oflag &= ~OPOST;
 
 	unsigned char* data;
+	unsigned char* coap_msg_raw;
+	unsigned int length = 0;
+	unsigned char* coap_msg;
+
 	data = receive_data(fd);
 	//printf("Received:\n");
 	//for(int i = 0; i < 25; i++) {
 	//	printf("%d ", data[i]);
 	//}
 	//printf("\n");
-	data_to_coap(data);
+	coap_msg_raw = data_to_coap(data, &length);
+	coap_msg = process_coap(coap_msg_raw, length);
+	for(int i = 0; i < 10; i++) {
+		printf("%c", coap_msg[i]);
+	}
+	printf("\n");
 }

@@ -40,18 +40,17 @@ unsigned char* receive_data(int fd)
 	return read_buffer_to_return;
 }
 
-unsigned char* data_to_coap(unsigned char* buffer)
+unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length)
 {
-	unsigned int length = 0;
 	int source[2] = { 0 };
 	int destination[2] = { 0 };
 	unsigned int ext_len_base = 0;
 	printf("%d", (unsigned int) buffer[0]);
 	if(buffer[0] == 0xa1) {
-		length = (unsigned int)buffer[1];
-		if(length == 0) {
+		*length = (unsigned int)buffer[1];
+		if(*length == 0) {
 			ext_len_base = 2;
-			length = (unsigned int)buffer[2] + (unsigned int)buffer[3];
+			*length = (unsigned int)buffer[2] + (unsigned int)buffer[3];
 		}
 		source[0] = (unsigned int)buffer[2 + ext_len_base];
 		source[1] = (unsigned int)buffer[3 + ext_len_base];
@@ -59,13 +58,71 @@ unsigned char* data_to_coap(unsigned char* buffer)
 		destination[1] = (unsigned int)buffer[5 + ext_len_base];
 	}
 	unsigned char* coap_msg = malloc(sizeof(unsigned char) * BUFFER_SIZE);
-	for(int i = 0; i < length; i++) {
+	for(int i = 0; i < *length; i++) {
 		coap_msg[i] = buffer[6 + i + ext_len_base];
 	}
 	printf("Received message: ");
-	for(int i = 0; i < length; i++) {
-		printf("%d ", (unsigned int)coap_msg[i]);
+	for(int i = 0; i < *length; i++) {
+		printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
 	}
+	printf("\n");
 	return coap_msg;
 	//printf("\nSource: %d.%d\nDestination: %d.%d", source[0], source[1], destination[0], destination[1]);
+}
+
+unsigned char* process_coap(unsigned char* buffer, unsigned int length)
+{
+	unsigned char* message_to_send = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+
+	switch(buffer[1])
+	{
+		case 1:
+			message_to_send = process_get(buffer, length);
+			break;
+		case 2:
+			message_to_send = process_post(buffer, length);
+			break;
+		default:
+			break;
+	}
+
+	return message_to_send;
+}
+
+// TODO: add processing logic
+unsigned char* process_get(unsigned char* buffer, unsigned int length)
+{
+	// assuming that token is not set and header is 4 bytes
+	unsigned int header_len = 4;
+	bool host_processed = false;
+
+	char* get_path = malloc(sizeof(unsigned char) * BUFFER_SIZE);;
+	unsigned int get_path_iterator = 0;
+
+	for(int i = header_len; i < header_len + length; i++) {
+		// check for uri_host option
+		if(((buffer[i] >> 4) == 3) && !host_processed) {
+			host_processed = true;
+			unsigned int ext_uri_length = 0;
+			unsigned int regular_uri_length = buffer[i] & 0x0f;
+			if(regular_uri_length == 13) {
+				i++;
+				ext_uri_length = buffer[i];
+			}
+			unsigned int whole_length = regular_uri_length + ext_uri_length;
+			i++;
+			for(int n = 0; n < whole_length; n++) {
+				get_path[get_path_iterator] = buffer[i];
+				i++;
+				get_path_iterator++;
+			}
+		}
+	}
+	return get_path;
+}
+
+// TODO: add processing logic
+unsigned char* process_post(unsigned char* buffer, unsigned int length)
+{
+	return "dummy";
 }

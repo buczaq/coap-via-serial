@@ -146,7 +146,7 @@ MessageType recognize_http_message_type(char* http_message)
 unsigned char* http_to_coap(char* http_message)
 {
 	MessageType message_type = recognize_http_message_type(http_message);
-	char* message_to_send;
+	unsigned char* message_to_send = malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	switch (message_type)
 	{
 		case GET:
@@ -169,7 +169,7 @@ unsigned char* process_http_get(char* message)
 	coap_get[0] = 64; // CoAP version 1, confirmable, no token
 	coap_get[1] = 1; // GET
 	coap_get[2] = 123; // message_id p1
-	coap_get[3] = 012; // message_id p2
+	coap_get[3] = 12; // message_id p2
 
 	int i = 4;
 	int coap_index = 4;
@@ -195,12 +195,17 @@ unsigned char* process_http_get(char* message)
 				opt_delta = 3;
 				int ext_opt_len = 0;
 				// hostname: max 24 bytes!
-				if(current_part_length > 12) {
-					ext_opt_len = current_part_length - 12;
-					current_part_length -= 12;
+				// assuming that two ext-len bytes will not be used
+				if(current_part_length > 13) {
+					ext_opt_len = current_part_length - 13;
+					current_part_length -= 13;
+					coap_get[coap_index] = 0x3d;
+					coap_index++;
+				} else {
+					coap_get[coap_index] = 0x30 + current_part_length;
+					coap_index++;
 				}
-				coap_get[coap_index] = 0x30 + current_part_length;
-				coap_index++;
+
 				if(ext_opt_len > 0) {
 					coap_get[coap_index] = ext_opt_len;
 					coap_index++;
