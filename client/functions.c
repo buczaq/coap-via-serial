@@ -99,7 +99,7 @@ unsigned char* process_get(unsigned char* buffer, unsigned int length)
 	char* get_path = malloc(sizeof(unsigned char) * BUFFER_SIZE);;
 	unsigned int get_path_iterator = 0;
 
-	for(int i = header_len; i < header_len + length; i++) {
+	for(int i = header_len; i < header_len + length;) {
 		// check for uri_host option
 		if(((buffer[i] >> 4) == 3) && !host_processed) {
 			host_processed = true;
@@ -116,8 +116,30 @@ unsigned char* process_get(unsigned char* buffer, unsigned int length)
 				i++;
 				get_path_iterator++;
 			}
+			get_path[get_path_iterator] = '/';
+			get_path_iterator++;
+		} else if(buffer[i]) {
+			unsigned int ext_uri_length = 0;
+			unsigned int regular_uri_length = buffer[i] & 0x0f;
+			if(regular_uri_length == 13) {
+				i++;
+				ext_uri_length = buffer[i];
+			}
+			unsigned int whole_length = regular_uri_length + ext_uri_length;
+			i++;
+			for(int n = 0; n < whole_length; n++) {
+				get_path[get_path_iterator] = buffer[i];
+				i++;
+				get_path_iterator++;
+			}
+			get_path[get_path_iterator] = '/';
+			get_path_iterator++;
+		} else {
+			break;
 		}
 	}
+	//delete last slash
+	get_path[--get_path_iterator] = '\0';
 	return get_path;
 }
 

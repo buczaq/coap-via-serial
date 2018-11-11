@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	//printf("\n");
 	coap_msg_raw = data_to_coap(data, &length);
 	coap_msg = process_coap(coap_msg_raw, length);
-	for(int i = 0; i < 10; i++) {
+	for(int i = 0; i < 15; i++) {
 		printf("%c", coap_msg[i]);
 	}
 	printf("\n");
