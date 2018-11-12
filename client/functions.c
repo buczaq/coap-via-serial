@@ -167,12 +167,21 @@ int16_t get_humidity_value()
 	return r.humidity_value;
 }
 
-void check_resources_and_send_response(unsigned char* message)
+void check_resources_and_send_response(int fd, unsigned char* message)
 {
 	struct Resources r = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
+	uint16_t resource_to_send;
 	if(strcmp(message, r.temperature) == 0) {
-		printf("\n\n%d\n\n", get_temperature_value());
+		resource_to_send = get_temperature_value();
+		printf("Sending temperature: \"%d\"...\n", resource_to_send);
 	} else if(strcmp(message, r.humidity) == 0) {
-		printf("\n\n%d\n\n", get_humidity_value());
+		resource_to_send = get_humidity_value();
+		printf("Sending humidity: \"%d\"...\n", resource_to_send);
 	}
+	unsigned char* write_buffer = malloc(sizeof(unsigned char));
+
+	write_buffer[0] = (unsigned char)resource_to_send;
+	int bytes_written = 0;
+	bytes_written = write(fd, write_buffer, 1);
+	close(fd);
 }

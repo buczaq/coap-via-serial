@@ -13,6 +13,6 @@ unsigned char* process_post(unsigned char* buffer, unsigned int length);
 int16_t get_temperature_value();
 int16_t get_humidity_value();
 
-void check_resources_and_send_response(unsigned char* message);
+void check_resources_and_send_response(int fd, unsigned char* message);
 
 #endif // _functions_H_

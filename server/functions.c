@@ -89,6 +89,8 @@ bool send_coap_to_port(unsigned char* buffer)
 	connect(sckt, res->ai_addr, res->ai_addrlen);
 	write(sckt, buffer, count_whole_message_size(buffer));
 
+	freeaddrinfo(res);
+
 	return true;
 }
 
@@ -113,7 +115,7 @@ unsigned char* listen_for_http(const char* host, const char* port)
     	printf("failed to create address (err = %d)",err);
 	}
 	if (bind(sckt,res->ai_addr,res->ai_addrlen) == -1) {
-    	printf("failed to bind (err = %d)",err);
+		printf("failed to bind (err = %d)",err);
 	}
 
 	struct sockaddr_storage src_addr;
@@ -256,13 +258,13 @@ unsigned char* process_http_post(char* message)
 
 uint16_t receive_response(const char* host, const char* port)
 {
-	unsigned char* buffer = malloc(sizeof(unsigned char));
+	unsigned char* buffer = malloc(sizeof(unsigned char) * 16);
 	const char* hostname = host;
 	const char* portname = port;
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = 0;
 	hints.ai_flags = AI_PASSIVE|AI_ADDRCONFIG;
 	struct addrinfo* res = 0;
@@ -274,20 +276,15 @@ uint16_t receive_response(const char* host, const char* port)
 	if (sckt == -1) {
     	printf("failed to create address (err = %d)",err);
 	}
-	if (bind(sckt,res->ai_addr,res->ai_addrlen) == -1) {
-    	printf("failed to bind (err = %d)",err);
-	}
 
-	struct sockaddr_storage src_addr;
-	socklen_t src_addr_len=sizeof(src_addr);
-	ssize_t count = recvfrom(sckt, buffer, BUFFER_SIZE, 1, (struct sockaddr*)&src_addr,&src_addr_len);
-	if (count == -1) {
-		printf("%s",strerror(errno));
-	} else if (count==sizeof(buffer)) {
-		printf("datagram too large for buffer: truncated");
-	} else {
-		printf("\nSucessfully received message\n");
+	connect(sckt, res->ai_addr, res->ai_addrlen);
+	read(sckt, buffer, 16);
+
+	printf("\n");
+	for(int i = 0; i < 16; i++) {
+		printf("%c:%d ", buffer[i], buffer[i]);
 	}
+	printf("\n");
 
 	freeaddrinfo(res);
 	return (uint16_t)buffer[0];
