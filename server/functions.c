@@ -13,7 +13,7 @@
 
 #include "functions.h"
 
-unsigned char* create_message_with_header(const char* buffer)
+unsigned char* create_message_with_header(char* buffer)
 {
 	unsigned char* message_with_header = malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	unsigned int coap_size = count_actual_buffer_size(buffer);
@@ -252,6 +252,45 @@ unsigned char* process_http_get(char* message)
 unsigned char* process_http_post(char* message)
 {
 	return "dummy";
+}
+
+uint16_t receive_response(const char* host, const char* port)
+{
+	unsigned char* buffer = malloc(sizeof(unsigned char));
+	const char* hostname = host;
+	const char* portname = port;
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_protocol = 0;
+	hints.ai_flags = AI_PASSIVE|AI_ADDRCONFIG;
+	struct addrinfo* res = 0;
+	int err=getaddrinfo(hostname, portname, &hints, &res);
+	if (err!=0) {
+		printf("failed to resolve local socket address (err = %d)",err);
+	}
+	int sckt = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
+	if (sckt == -1) {
+    	printf("failed to create address (err = %d)",err);
+	}
+	if (bind(sckt,res->ai_addr,res->ai_addrlen) == -1) {
+    	printf("failed to bind (err = %d)",err);
+	}
+
+	struct sockaddr_storage src_addr;
+	socklen_t src_addr_len=sizeof(src_addr);
+	ssize_t count = recvfrom(sckt, buffer, BUFFER_SIZE, 1, (struct sockaddr*)&src_addr,&src_addr_len);
+	if (count == -1) {
+		printf("%s",strerror(errno));
+	} else if (count==sizeof(buffer)) {
+		printf("datagram too large for buffer: truncated");
+	} else {
+		printf("\nSucessfully received message\n");
+	}
+
+	freeaddrinfo(res);
+	return (uint16_t)buffer[0];
 }
 
 

@@ -2,11 +2,11 @@
 #define _functions_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "constant.h"
 
-bool open_device(int* fd, const char* device);
-unsigned char* create_message_with_header(const char* buffer);
+unsigned char* create_message_with_header(char* buffer);
 bool send_coap_to_port(unsigned char* buffer);
 unsigned char* http_to_coap(char* http_message);
 unsigned char* listen_for_http(const char* host, const char* port);
@@ -22,5 +22,6 @@ unsigned char* process_http_get(char* message);
 unsigned char* process_http_post(char* message);
 unsigned int count_actual_buffer_size(unsigned char* buffer);
 unsigned int count_whole_message_size(unsigned char* buffer);
+uint16_t receive_response(const char* host, const char* port);
 
 #endif // _functions_H_

@@ -13,21 +13,24 @@
 
 int main(int argc, char *argv[])
 {
-	const char* hostname = "0.0.0.0";
-	const char* portname = "8001";
-	unsigned char* http_message;
-	unsigned char* coap_message;
-	unsigned char* coap_message_with_header;
+	while(true) {
+		// initializing new variables every time
+		const char* hostname = "0.0.0.0";
+		const char* portname = "8001";
+		const char* uart_portname = "9001";
+		unsigned char* http_message;
+		unsigned char* coap_message;
+		unsigned char* coap_message_with_header;
 
-//	while(true) {
-		http_message = listen_for_http(hostname, portname);
-		coap_message = http_to_coap(http_message);
-		coap_message_with_header = create_message_with_header(coap_message);
-		printf("Sending:\n");
-		for(int i = 0; i < 25; i++) {
-			printf("%d ", coap_message_with_header[i]);
-		}
-		printf("\n");
-		send_coap_to_port(coap_message_with_header);
-//	}
+			http_message = listen_for_http(hostname, portname);
+			coap_message = http_to_coap(http_message);
+			coap_message_with_header = create_message_with_header(coap_message);
+			printf("[DBG]Sending:\n");
+			for(int i = 0; i < 25; i++) {
+				printf("%d ", coap_message_with_header[i]);
+			}
+			printf("\n");
+			send_coap_to_port(coap_message_with_header);
+			printf("\nResponse: %d\n", receive_response(hostname, uart_portname));
+	}
 }

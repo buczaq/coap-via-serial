@@ -41,21 +41,21 @@ int main(int argc, char *argv[])
 
 	SerialPortSettings.c_oflag &= ~OPOST;
 
-	unsigned char* data;
-	unsigned char* coap_msg_raw;
-	unsigned int length = 0;
-	unsigned char* coap_msg;
+	while(true) {
+		// initializing new variables every time
+		unsigned char* data;
+		unsigned char* coap_msg_raw;
+		unsigned int length = 0;
+		unsigned char* coap_msg;
 
-	data = receive_data(fd);
-	//printf("Received:\n");
-	//for(int i = 0; i < 25; i++) {
-	//	printf("%d ", data[i]);
-	//}
-	//printf("\n");
-	coap_msg_raw = data_to_coap(data, &length);
-	coap_msg = process_coap(coap_msg_raw, length);
-	for(int i = 0; i < 15; i++) {
-		printf("%c", coap_msg[i]);
+		data = receive_data(fd);
+		printf("[DBG]Received:\n");
+		for(int i = 0; i < 25; i++) {
+			printf("%d ", data[i]);
+		}
+		printf("\n");
+		coap_msg_raw = data_to_coap(data, &length);
+		coap_msg = process_coap(coap_msg_raw, length);
+		check_resources_and_send_response(coap_msg);
 	}
-	printf("\n");
 }

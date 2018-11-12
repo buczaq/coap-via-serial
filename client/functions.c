@@ -14,6 +14,13 @@
 #include "constant.h"
 #include "functions.h"
 
+struct Resources {
+	char* temperature;
+	char* humidity;
+	int16_t temperature_value;
+	int16_t humidity_value;
+};
+
 bool open_device(int* fd, const char* device)
 {
 	*fd = open(device,O_RDWR | O_NOCTTY);
@@ -61,10 +68,10 @@ unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length)
 	for(int i = 0; i < *length; i++) {
 		coap_msg[i] = buffer[6 + i + ext_len_base];
 	}
-	printf("Received message: ");
-	for(int i = 0; i < *length; i++) {
-		printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
-	}
+//	printf("Received message: ");
+//	for(int i = 0; i < *length; i++) {
+//		printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
+//	}
 	printf("\n");
 	return coap_msg;
 	//printf("\nSource: %d.%d\nDestination: %d.%d", source[0], source[1], destination[0], destination[1]);
@@ -147,4 +154,25 @@ unsigned char* process_get(unsigned char* buffer, unsigned int length)
 unsigned char* process_post(unsigned char* buffer, unsigned int length)
 {
 	return "dummy";
+}
+
+int16_t get_temperature_value()
+{
+	struct Resources r = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
+	return r.temperature_value;
+}
+int16_t get_humidity_value()
+{
+	struct Resources r = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
+	return r.humidity_value;
+}
+
+void check_resources_and_send_response(unsigned char* message)
+{
+	struct Resources r = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
+	if(strcmp(message, r.temperature) == 0) {
+		printf("\n\n%d\n\n", get_temperature_value());
+	} else if(strcmp(message, r.humidity) == 0) {
+		printf("\n\n%d\n\n", get_humidity_value());
+	}
 }
