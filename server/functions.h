@@ -7,7 +7,7 @@
 #include "constant.h"
 
 unsigned char* create_message_with_header(char* buffer);
-bool send_coap_to_port(unsigned char* buffer);
+uint16_t send_coap_to_port_and_wait_for_response(unsigned char* buffer);
 unsigned char* http_to_coap(char* http_message);
 unsigned char* listen_for_http(const char* host, const char* port);
 

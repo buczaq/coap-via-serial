@@ -182,7 +182,7 @@ void check_resources_and_send_response(int fd, unsigned char* message)
 
 	write_buffer[0] = (unsigned char)resource_to_send;
 	int bytes_written = 0;
-	sleep(2);
+
 	bytes_written = write(fd, write_buffer, 1);
 	printf("bytes written: %d\n", bytes_written);
 	close(fd);

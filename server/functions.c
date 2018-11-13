@@ -68,7 +68,7 @@ unsigned int count_whole_message_size(unsigned char* buffer)
 	return size + 1;
 }
 
-bool send_coap_to_port(unsigned char* buffer)
+uint16_t send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 {
 	const char* hostname = "0.0.0.0";
 	const char* portname = "9001";
@@ -89,20 +89,19 @@ bool send_coap_to_port(unsigned char* buffer)
 	connect(sckt, res->ai_addr, res->ai_addrlen);
 	write(sckt, buffer, count_whole_message_size(buffer));
 
-	sleep(1);
+	char* tmp_buffer;
 
-	unsigned char bf[1];
-	bf[0] = '\0';
-	while(bf[0] == '\0') {
-		read(sckt, bf, 1);
-	}
+	// reading data that has just been sent in order to ignore it
+	read(sckt, tmp_buffer, count_whole_message_size(tmp_buffer));
 
-	printf("%d", bf[0]);
+	unsigned char response[1];
 
-	//close(sckt);
-	//freeaddrinfo(res);
+	read(sckt, response, 1);
 
-	return true;
+	close(sckt);
+	freeaddrinfo(res);
+
+	return (uint16_t)response[0];
 }
 
 unsigned char* listen_for_http(const char* host, const char* port)
@@ -115,7 +114,7 @@ unsigned char* listen_for_http(const char* host, const char* port)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_protocol = 0;
-	//hints.ai_flags = AI_PASSIVE|AI_ADDRCONFIG;
+
 	struct addrinfo* res = 0;
 	int err=getaddrinfo(hostname, portname, &hints, &res);
 	if (err!=0) {
@@ -266,43 +265,6 @@ unsigned char* process_http_post(char* message)
 {
 	return "dummy";
 }
-
-uint16_t receive_response(const char* host, const char* port)
-{
-	unsigned char* buffer = malloc(sizeof(unsigned char));
-	const char* hostname = host;
-	const char* portname = port;
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = 0;
-	//hints.ai_flags = AI_PASSIVE|AI_ADDRCONFIG;
-	struct addrinfo* res = 0;
-	int err=getaddrinfo(hostname, portname, &hints, &res);
-	if (err!=0) {
-		printf("failed to resolve local socket address (err = %d)",err);
-	}
-	int sckt = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
-	if (sckt == -1) {
-    	printf("failed to create address (err = %d)",err);
-	}
-
-	//connect(sckt, res->ai_addr, res->ai_addrlen);
-	while(buffer[0] == '\0') {
-		read(sckt, buffer, 1);
-	}
-
-	printf("\n");
-	for(int i = 0; i < BUFFER_SIZE; i++) {
-		printf("%c:%d ", buffer[i], buffer[i]);
-	}
-	printf("\n");
-
-	//freeaddrinfo(res);
-	return (uint16_t)buffer[0];
-}
-
 
 //2 params(uart) 4 bytes per value --rs-> 
 
