@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
 		}
 		printf("\n");
 		send_coap_to_port(coap_message_with_header);
-		printf("Waiting for response...\n");
-		uint16_t response = receive_response(hostname, uart_portname);
-		printf("\nResponse: %d\n", response);
+		//printf("Waiting for response...\n");
+		//uint16_t response = receive_response(hostname, uart_portname);
+		//printf("\nResponse: %d\n", response);
 	//}
 }
