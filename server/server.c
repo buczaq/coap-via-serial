@@ -13,28 +13,51 @@
 
 int main(int argc, char *argv[])
 {
-	//while(true) {
-		// initializing new variables every time
-		printf("Initializing new sequence...\n");
-		const char* hostname = "0.0.0.0";
-		const char* portname = "8001";
-		const char* uart_portname = "9001";
-		unsigned char* http_message;
-		unsigned char* coap_message;
-		unsigned char* coap_message_with_header;
+	const char* hostname = "0.0.0.0";
+	const char* portname = "8001";
+	const char* uart_portname = "9001";
 
-		http_message = listen_for_http(hostname, portname);
-		coap_message = http_to_coap(http_message);
-		coap_message_with_header = create_message_with_header(coap_message);
-		printf("[DBG]Sending:\n");
-		for(int i = 0; i < 25; i++) {
-			printf("%d ", coap_message_with_header[i]);
-		}
-		printf("\n");
-		uint16_t response = send_coap_to_port_and_wait_for_response(coap_message_with_header);
-		printf("Response: %d\n", response);
-		//printf("Waiting for response...\n");
-		//uint16_t response = receive_response(hostname, uart_portname);
-		//printf("\nResponse: %d\n", response);
-	//}
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+
+	struct addrinfo* res = 0;
+	int err=getaddrinfo(hostname, portname, &hints, &res);
+	if (err!=0) {
+		printf("failed to resolve local socket address (err = %d)",err);
+	}
+	int sckt = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
+	if (sckt == -1) {
+    	printf("failed to create address (err = %d)",err);
+	}
+	if (bind(sckt,res->ai_addr,res->ai_addrlen) == -1) {
+		printf("failed to bind (err = %d)",err);
+	}
+
+	listen(sckt, 128);
+	int accsckt = accept(sckt, (struct sockaddr *) &res->ai_addr, &res->ai_addrlen);
+
+	printf("Initializing new sequence...\n");
+	unsigned char* http_message;
+	unsigned char* coap_message;
+	unsigned char* coap_message_with_header;
+
+	http_message = listen_for_http(sckt, res, accsckt);
+	coap_message = http_to_coap(http_message);
+	coap_message_with_header = create_message_with_header(coap_message);
+	printf("[DBG]Sending:\n");
+	for(int i = 0; i < 25; i++) {
+		printf("%d ", coap_message_with_header[i]);
+	}
+	printf("\n");
+	uint16_t response = send_coap_to_port_and_wait_for_response(coap_message_with_header);
+	printf("Response: %d\n", response);
+	unsigned char char_response[1];
+	char_response[0] = (unsigned char)response + '0';
+	// FIXME: hangs
+	int bytes_written = write(accsckt, char_response, 1);
+	sleep(1);
+	printf("Responded with %d byte(s).\n", bytes_written);
 }

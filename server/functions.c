@@ -104,33 +104,13 @@ uint16_t send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 	return (uint16_t)response[0];
 }
 
-unsigned char* listen_for_http(const char* host, const char* port)
+unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 {
 	unsigned char* buffer = malloc(sizeof(unsigned char) * BUFFER_SIZE);
-	const char* hostname = host;
-	const char* portname = port;
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_protocol = 0;
-
-	struct addrinfo* res = 0;
-	int err=getaddrinfo(hostname, portname, &hints, &res);
-	if (err!=0) {
-		printf("failed to resolve local socket address (err = %d)",err);
-	}
-	int sckt = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
-	if (sckt == -1) {
-    	printf("failed to create address (err = %d)",err);
-	}
-	if (bind(sckt,res->ai_addr,res->ai_addrlen) == -1) {
-		printf("failed to bind (err = %d)",err);
-	}
 
 	struct sockaddr_storage src_addr;
 	socklen_t src_addr_len=sizeof(src_addr);
-	ssize_t count = recvfrom(sckt, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&src_addr,&src_addr_len);
+	ssize_t count = recvfrom(accsckt, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&src_addr,&src_addr_len);
 	if (count == -1) {
 		printf("%s",strerror(errno));
 	} else if (count==sizeof(buffer)) {
@@ -139,7 +119,7 @@ unsigned char* listen_for_http(const char* host, const char* port)
 		printf("\nSucessfully received message\n");
 	}
 
-	freeaddrinfo(res);
+	//freeaddrinfo(res);
 	return buffer;
 }
 
