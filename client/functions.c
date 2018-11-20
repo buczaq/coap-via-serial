@@ -40,7 +40,9 @@ unsigned char* receive_data(int fd)
 	unsigned char* read_buffer_to_return = malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	unsigned char read_buffer[256] = { '\0' };
 	int bytes_read = 0;
-	bytes_read = read(fd, &read_buffer, BUFFER_SIZE);
+	while(read_buffer[0] != 0xa1) {
+		bytes_read = read(fd, &read_buffer, BUFFER_SIZE);
+	}
 	for(int i = 0; i < bytes_read; i++) {
 		read_buffer_to_return[i] = read_buffer[i];
 	}
@@ -178,12 +180,15 @@ void check_resources_and_send_response(int fd, unsigned char* message)
 		resource_to_send = get_humidity_value();
 		printf("Sending humidity: \"%d\"...\n", resource_to_send);
 	}
-	unsigned char* write_buffer = malloc(sizeof(unsigned char));
+	unsigned char* write_buffer = malloc(sizeof(unsigned char) * 4);
+	for(int i = 0; i < 4; i++) {
+		write_buffer[i] = '\0';
+	}
 
-	write_buffer[0] = (unsigned char)resource_to_send;
+	sprintf(write_buffer, "%d", resource_to_send);
+
 	int bytes_written = 0;
 
-	bytes_written = write(fd, write_buffer, 1);
+	bytes_written = write(fd, write_buffer, 4);
 	printf("bytes written: %d\n", bytes_written);
-	close(fd);
 }

@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
 	SerialPortSettings.c_cflag &= ~CSIZE;
 	SerialPortSettings.c_cflag |= CS8;
 
-	SerialPortSettings.c_cflag &= ~CRTSCTS;
 	SerialPortSettings.c_cflag |= CREAD | CLOCAL;
 
 	SerialPortSettings.c_iflag &= IXANY;
@@ -40,8 +39,8 @@ int main(int argc, char *argv[])
 
 	SerialPortSettings.c_oflag &= ~OPOST;
 
-	//while(true) {
-		// initializing new variables every time
+	while(true) {
+		//initializing new variables every time
 		unsigned char* data;
 		unsigned char* coap_msg_raw;
 		unsigned int length = 0;
@@ -56,5 +55,7 @@ int main(int argc, char *argv[])
 		coap_msg_raw = data_to_coap(data, &length);
 		coap_msg = process_coap(coap_msg_raw, length);
 		check_resources_and_send_response(fd, coap_msg);
-	//}
+		sleep(1);
+	}
+	close(fd);
 }

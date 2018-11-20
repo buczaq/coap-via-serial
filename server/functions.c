@@ -68,7 +68,7 @@ unsigned int count_whole_message_size(unsigned char* buffer)
 	return size + 1;
 }
 
-uint16_t send_coap_to_port_and_wait_for_response(unsigned char* buffer)
+char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 {
 	const char* hostname = "0.0.0.0";
 	const char* portname = "9001";
@@ -92,16 +92,16 @@ uint16_t send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 	char* tmp_buffer;
 
 	// reading data that has just been sent in order to ignore it
-	read(sckt, tmp_buffer, count_whole_message_size(tmp_buffer));
+	read(sckt, tmp_buffer, count_whole_message_size(buffer));
 
-	unsigned char response[1];
+	char* response = malloc(sizeof(char) * 4);
 
-	read(sckt, response, 1);
+	read(sckt, response, 4);
 
 	close(sckt);
 	freeaddrinfo(res);
 
-	return (uint16_t)response[0];
+	return response;
 }
 
 unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
@@ -110,7 +110,10 @@ unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 
 	struct sockaddr_storage src_addr;
 	socklen_t src_addr_len=sizeof(src_addr);
-	ssize_t count = recvfrom(accsckt, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&src_addr,&src_addr_len);
+	ssize_t count = 0;
+	while(buffer[0] == '\0') {
+		count = recvfrom(accsckt, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&src_addr,&src_addr_len);
+	}
 	if (count == -1) {
 		printf("%s",strerror(errno));
 	} else if (count==sizeof(buffer)) {

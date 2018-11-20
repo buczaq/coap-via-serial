@@ -6,24 +6,28 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 HOST_NAME = 'localhost'
 PORT_NUMBER = 8000
 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect(("0.0.0.0", 8001))
 
 class MyHandler(BaseHTTPRequestHandler):
-    def do_HEAD(self):
+    def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
+    def do_HEAD(self):
+        self._set_headers()
 
     def do_GET(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("0.0.0.0", 8001))
         request = "GET " + "0.0.0.0" + self.path + " "
+        global s
         s.send(request.encode())
+        print("dobrze?")
         '''s.recv(len(request))'''
-        response = s.recv(1024);
-        s.close()
+        response = s.recv(1024)
         print(response.decode())
-        print("the end")
-        return "hrllo"
+        self._set_headers()
+        self.wfile.write(bytes(response.decode() + "\n", "utf8"))
+        return
 
     def handle_http(self, status_code, path):
         self.send_response(status_code)
@@ -50,4 +54,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     httpd.server_close()
+    s.close()
 print(time.asctime(), 'Server Stops - %s:%s' % (HOST_NAME, PORT_NUMBER))
