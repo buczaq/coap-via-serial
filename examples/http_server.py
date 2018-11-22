@@ -21,10 +21,21 @@ class MyHandler(BaseHTTPRequestHandler):
         request = "GET " + "0.0.0.0" + self.path + " "
         global s
         s.send(request.encode())
-        print("dobrze?")
-        '''s.recv(len(request))'''
         response = s.recv(1024)
         print(response.decode())
+        self._set_headers()
+        self.wfile.write(bytes(response.decode() + "\n", "utf8"))
+        return
+
+    def do_POST(self):
+        request = "POST " + "0.0.0.0" + self.path + " "
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        print(post_data)
+        request += post_data.decode('utf-8')
+        request += " "
+        s.send(request.encode())
+        response = s.recv(1024)
         self._set_headers()
         self.wfile.write(bytes(response.decode() + "\n", "utf8"))
         return

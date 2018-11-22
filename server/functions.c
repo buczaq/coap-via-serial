@@ -56,12 +56,11 @@ unsigned int count_actual_buffer_size(unsigned char* buffer)
 unsigned int count_whole_message_size(unsigned char* buffer)
 {
 	unsigned int size = 0;
-	if(buffer[1] != '\0') {
-		size = 8;
-	} else {
-		size = 6;
-	}
-	while(buffer[size] != '\0') {
+	// there is no case where 4 actual coap bytes in a row will be 0
+	while(!(buffer[size] == '\0'
+	        && buffer[size + 1] == '\0'
+			&& buffer[size + 2] == '\0'
+			&& buffer[size + 3] == '\0')) {
 		size++;
 	}
 
@@ -175,7 +174,7 @@ unsigned char* process_http_get(char* message)
 	int whole_url_length = 0;
 	int url_index = 0;
 	bool time_to_break = false;
-	// workaround! FIXME
+
 	while(!time_to_break) {
 		url[i - 4] = message[i];
 		//printf("%c", message[i])
@@ -246,7 +245,120 @@ unsigned char* process_http_get(char* message)
 // TODO
 unsigned char* process_http_post(char* message)
 {
-	return "dummy";
+	printf("\n\n\n%s\n\n\n", message);
+	unsigned char* coap_post = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	// hardcoded values
+	//assuming no token
+	coap_post[0] = 64; // CoAP version 1, confirmable, no token
+	coap_post[1] = 1; // GET
+	coap_post[2] = 123; // message_id p1
+	coap_post[3] = 12; // message_id p2
+
+	int i = 4;
+	int coap_index = 4;
+	char url[128] = { '\0' };
+	bool host_is_specified = false;
+	int opt_delta = 0;
+	int current_part_length = 0;
+	int whole_url_length = 0;
+	int url_index = 0;
+	bool time_to_break = false;
+
+	while(!time_to_break) {
+		url[i - 4] = message[i];
+		//printf("%c", message[i])
+		i++;
+		current_part_length++;
+		whole_url_length++;
+		if(message[i] == '/' || message[i] == ' ') {
+			if(message[i] == ' ') {
+				time_to_break = true;
+			}
+			if(!host_is_specified) {
+				opt_delta = 3;
+				int ext_opt_len = 0;
+				// hostname: max 24 bytes!
+				// assuming that two ext-len bytes will not be used
+				if(current_part_length > 13) {
+					ext_opt_len = current_part_length - 13;
+					current_part_length -= 13;
+					coap_post[coap_index] = 0x3d;
+					coap_index++;
+				} else {
+					coap_post[coap_index] = 0x30 + current_part_length;
+					coap_index++;
+				}
+
+				if(ext_opt_len > 0) {
+					coap_post[coap_index] = ext_opt_len;
+					coap_index++;
+				}
+				host_is_specified = true;
+				for(int m = 0; m < current_part_length; m++) {
+					coap_post[coap_index] = url[url_index];
+					url_index++;
+					coap_index++;
+				}
+				current_part_length = 0;
+			} else {
+				// assuming that option is uri_path (optcode 11)
+				opt_delta = abs(11 - opt_delta);
+				int ext_opt_len = 0;
+				// hostname: max 24 bytes!
+				int opt_len = current_part_length;
+				if(opt_len > 12) {
+					ext_opt_len = opt_len - 12;
+					opt_len -= 12;
+				}
+				coap_post[coap_index] = (opt_delta << 4) + opt_len;
+				coap_index++;
+				if(ext_opt_len > 0) {
+					coap_post[coap_index] = ext_opt_len;
+					coap_index++;
+				}
+				for(int m = 0; m < current_part_length; m++) {
+					coap_post[coap_index] = url[url_index];
+					url_index++;
+					coap_index++;
+				}
+				current_part_length = 0;
+			}
+			i++;
+			url_index++;
+		}
+	}
+
+	opt_delta = abs(27 - opt_delta);
+	unsigned int ext_opt_delta = 0;
+	if(opt_delta > 12) {
+		ext_opt_delta = opt_delta - 13;
+		opt_delta = 13;
+	}
+	coap_post[coap_index] = (opt_delta << 4) + 1;
+	coap_index++;
+	if(ext_opt_delta) {
+		coap_post[coap_index] = ext_opt_delta;
+		coap_index++;
+	}
+	// assuming one block with size of 16 bytes
+	coap_post[coap_index] = 0;
+	coap_index++;
+	// end of options mark
+	coap_post[coap_index] = 0xff;
+	coap_index++;
+	while(message[i] != ' ') {
+		coap_post[coap_index] = message[i];
+		coap_index++;
+		i++;
+	}
+	
+	//for(int j = 0; j <= coap_index; j++) {
+	//	printf("%d : %c\t", (unsigned int)coap_post[j], coap_post[j]);
+	//}
+
+	printf("\n");
+
+	return coap_post;
 }
 
 //2 params(uart) 4 bytes per value --rs-> 
