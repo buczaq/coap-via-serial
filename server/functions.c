@@ -46,7 +46,10 @@ unsigned char* create_message_with_header(char* buffer)
 unsigned int count_actual_buffer_size(unsigned char* buffer)
 {
 	unsigned int size = 0;
-	while(buffer[size] != '\0') {
+	while(!(buffer[size] == '\0'
+	        && buffer[size + 1] == '\0'
+			&& buffer[size + 2] == '\0'
+			&& buffer[size + 3] == '\0')) {
 		size++;
 	}
 
@@ -257,7 +260,7 @@ unsigned char* process_http_post(char* message)
 	coap_post[2] = 123; // message_id p1
 	coap_post[3] = 12; // message_id p2
 
-	int i = 4;
+	int i = 5;
 	int coap_index = 4;
 	char url[128] = { '\0' };
 	bool host_is_specified = false;
@@ -270,7 +273,7 @@ unsigned char* process_http_post(char* message)
 	bool time_to_break = false;
 
 	while(!time_to_break) {
-		url[i - 4] = message[i];
+		url[i - 5] = message[i];
 		//printf("%c", message[i])
 		i++;
 		current_part_length++;
@@ -355,15 +358,16 @@ unsigned char* process_http_post(char* message)
 	// end of options mark
 	coap_post[coap_index] = 0xff;
 	coap_index++;
+
 	while(message[i] != ' ') {
 		coap_post[coap_index] = message[i];
 		coap_index++;
 		i++;
 	}
 	
-	//for(int j = 0; j <= coap_index; j++) {
-	//	printf("%d : %c\t", (unsigned int)coap_post[j], coap_post[j]);
-	//}
+	for(int j = 0; j <= coap_index; j++) {
+		printf("%d : %c\t", (unsigned int)coap_post[j], coap_post[j]);
+	}
 
 	printf("\n");
 

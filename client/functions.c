@@ -63,16 +63,16 @@ unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length)
 	for(int i = 0; i < *length; i++) {
 		coap_msg[i] = buffer[6 + i + ext_len_base];
 	}
-//	printf("Received message: ");
-//	for(int i = 0; i < *length; i++) {
-//		printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
-//	}
+	printf("Received message: ");
+	for(int i = 0; i < *length; i++) {
+		printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
+	}
 	printf("\n");
 	return coap_msg;
 	//printf("\nSource: %d.%d\nDestination: %d.%d", source[0], source[1], destination[0], destination[1]);
 }
 
-unsigned char* process_coap(unsigned char* buffer, unsigned int length)
+unsigned char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload)
 {
 	unsigned char* message_to_send = malloc(sizeof(unsigned char) * BUFFER_SIZE);
 
@@ -82,7 +82,7 @@ unsigned char* process_coap(unsigned char* buffer, unsigned int length)
 			message_to_send = process_get(buffer, length);
 			break;
 		case 2:
-			message_to_send = process_post(buffer, length);
+			message_to_send = process_post(buffer, length, post_payload);
 			break;
 		default:
 			break;
@@ -146,13 +146,13 @@ unsigned char* process_get(unsigned char* buffer, unsigned int length)
 }
 
 // TODO: add processing logic
-unsigned char* process_post(unsigned char* buffer, unsigned int length)
+unsigned char* process_post(unsigned char* buffer, unsigned int length, char* post_payload)
 {
 	// assuming that token is not set and header is 4 bytes
 	unsigned int header_len = 4;
 	bool host_processed = false;
 
-	char* get_path = malloc(sizeof(unsigned char) * BUFFER_SIZE);;
+	char* get_path = malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	unsigned int get_path_iterator = 0;
 	unsigned int last_delta = 0;
 	int opt_delta_sum = 0;
@@ -160,15 +160,26 @@ unsigned char* process_post(unsigned char* buffer, unsigned int length)
 	for(int i = header_len; i < header_len + length;) {
 		last_delta = buffer[i] >> 4;
 		opt_delta_sum += last_delta;
-		printf("\nopt delta sum: %d\n", opt_delta_sum);
 		if(last_delta == 13) {
 			i++;
 			opt_delta_sum += buffer[i];
-			printf("\nopt delta sum inside IF: %d\n", opt_delta_sum);
 		}
 		// check for block indicator
 		if(opt_delta_sum == 27) {
-			printf("\n\n FOUND BLOCK INDICATOR \n\n");
+			// very ugly workaround where we ignore block info and just go for data
+			while(buffer[i] != 0xff) {
+				i++;
+			}
+			i++;
+			int j = 0;
+			while(buffer[i] != '\0') {
+				printf("dbg1");
+				post_payload[j] = buffer[i];
+				i++;
+				j++;
+			}
+			printf("dbg2");
+			break;
 		}
 		// check for uri_host option
 		if((last_delta == 3) && !host_processed) {
@@ -210,6 +221,9 @@ unsigned char* process_post(unsigned char* buffer, unsigned int length)
 	}
 	//delete last slash
 	get_path[--get_path_iterator] = '\0';
+
+	printf("\npath post:%s\n", get_path);
+
 	return get_path;
 }
 
@@ -222,9 +236,20 @@ int16_t get_humidity_value(struct Resources* resources)
 	return resources->humidity_value;
 }
 
+int16_t set_temperature_value(struct Resources* resources, int16_t value)
+{
+	resources->temperature_value = value;
+	return resources->temperature_value;
+}
+int16_t set_humidity_value(struct Resources* resources, int16_t value)
+{
+	resources->humidity_value = value;
+	return resources->humidity_value;
+}
+
 void check_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources)
 {
-	uint16_t resource_to_send;
+	int16_t resource_to_send;
 	if(strcmp(message, resources->temperature) == 0) {
 		resource_to_send = get_temperature_value(resources);
 		printf("Sending temperature: \"%d\"...\n", resource_to_send);
@@ -238,6 +263,33 @@ void check_resources_and_send_response(int fd, unsigned char* message, struct Re
 	}
 
 	sprintf(write_buffer, "%d", resource_to_send);
+
+	int bytes_written = 0;
+
+	bytes_written = write(fd, write_buffer, 4);
+	printf("bytes written: %d\n", bytes_written);
+}
+
+void set_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, char* post_payload)
+{
+	int16_t resource_to_set = (int)strtol(post_payload, (char **)NULL, 10);
+	printf("\n[DBG] Post payload is: %d\n", resource_to_set);
+	printf("\n\ncomparing:\nEXPECT: %s\nACTUAL: %s\n", message, resources->temperature);
+	printf("\n\ncomparing:\nEXPECT: %s\nACTUAL: %s\nstrcmp:%d\n", message, resources->humidity, strcmp(message, resources->humidity));
+	if(strcmp(message, resources->temperature) == 0) {
+		resource_to_set = set_temperature_value(resources, resource_to_set);
+		printf("Setting temperature to: \"%d\"...\n", resource_to_set);
+	} else if(strcmp(message, resources->humidity) == 0) {
+		resource_to_set = set_humidity_value(resources, resource_to_set);
+		printf("Setting humidity to: \"%d\"...\n", resource_to_set);
+	}
+
+	unsigned char* write_buffer = malloc(sizeof(unsigned char) * 4);
+	for(int i = 0; i < 4; i++) {
+		write_buffer[i] = '\0';
+	}
+
+	sprintf(write_buffer, "%d", resource_to_set);
 
 	int bytes_written = 0;
 

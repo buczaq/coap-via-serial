@@ -10,6 +10,7 @@
 #include <sys/uio.h>
 
 #include "functions.h"
+#include "constant.h"
 
 int main(int argc, char *argv[])
 {	
@@ -48,6 +49,10 @@ int main(int argc, char *argv[])
 		unsigned char* coap_msg_raw;
 		unsigned int length = 0;
 		unsigned char* coap_msg;
+		unsigned char post_payload[PAYLOAD_SIZE];
+		for(int i = 0; i < PAYLOAD_SIZE; i++) {
+			post_payload[i] = '\0';
+		}
 
 		data = receive_data(fd);
 		printf("[DBG]Received:\n");
@@ -56,8 +61,12 @@ int main(int argc, char *argv[])
 		}
 		printf("\n");
 		coap_msg_raw = data_to_coap(data, &length);
-		coap_msg = process_coap(coap_msg_raw, length);
-		check_resources_and_send_response(fd, coap_msg, &resources);
+		coap_msg = process_coap(coap_msg_raw, length, post_payload);
+		if(!post_payload[0]) {
+			check_resources_and_send_response(fd, coap_msg, &resources);
+		} else {
+			set_resources_and_send_response(fd, coap_msg, &resources, post_payload);
+		}
 	}
 	close(fd);
 }
