@@ -170,6 +170,7 @@ unsigned char* process_http_get(char* message)
 	char url[128] = { '\0' };
 	bool host_is_specified = false;
 	int opt_delta = 0;
+	int last_opt_number = 0;
 	int current_part_length = 0;
 	int whole_url_length = 0;
 	int url_index = 0;
@@ -188,6 +189,7 @@ unsigned char* process_http_get(char* message)
 			if(!host_is_specified) {
 				opt_delta = 3;
 				int ext_opt_len = 0;
+				last_opt_number = 3;
 				// hostname: max 24 bytes!
 				// assuming that two ext-len bytes will not be used
 				if(current_part_length > 13) {
@@ -213,7 +215,8 @@ unsigned char* process_http_get(char* message)
 				current_part_length = 0;
 			} else {
 				// assuming that option is uri_path (optcode 11)
-				opt_delta = abs(11 - opt_delta);
+				opt_delta = abs(11 - last_opt_number);
+				last_opt_number = 11;
 				int ext_opt_len = 0;
 				// hostname: max 24 bytes!
 				int opt_len = current_part_length;
@@ -250,7 +253,7 @@ unsigned char* process_http_post(char* message)
 	// hardcoded values
 	//assuming no token
 	coap_post[0] = 64; // CoAP version 1, confirmable, no token
-	coap_post[1] = 1; // GET
+	coap_post[1] = 2; // POST
 	coap_post[2] = 123; // message_id p1
 	coap_post[3] = 12; // message_id p2
 
@@ -259,6 +262,8 @@ unsigned char* process_http_post(char* message)
 	char url[128] = { '\0' };
 	bool host_is_specified = false;
 	int opt_delta = 0;
+	int opt_delta_sum = 0;
+	int last_opt_number = 0;
 	int current_part_length = 0;
 	int whole_url_length = 0;
 	int url_index = 0;
@@ -276,6 +281,8 @@ unsigned char* process_http_post(char* message)
 			}
 			if(!host_is_specified) {
 				opt_delta = 3;
+				opt_delta_sum += opt_delta;
+				last_opt_number = 3;
 				int ext_opt_len = 0;
 				// hostname: max 24 bytes!
 				// assuming that two ext-len bytes will not be used
@@ -302,7 +309,9 @@ unsigned char* process_http_post(char* message)
 				current_part_length = 0;
 			} else {
 				// assuming that option is uri_path (optcode 11)
-				opt_delta = abs(11 - opt_delta);
+				opt_delta = abs(11 - last_opt_number);
+				last_opt_number = 11;
+				opt_delta_sum += opt_delta;
 				int ext_opt_len = 0;
 				// hostname: max 24 bytes!
 				int opt_len = current_part_length;
@@ -328,7 +337,7 @@ unsigned char* process_http_post(char* message)
 		}
 	}
 
-	opt_delta = abs(27 - opt_delta);
+	opt_delta = abs(27 - last_opt_number);
 	unsigned int ext_opt_delta = 0;
 	if(opt_delta > 12) {
 		ext_opt_delta = opt_delta - 13;

@@ -148,7 +148,69 @@ unsigned char* process_get(unsigned char* buffer, unsigned int length)
 // TODO: add processing logic
 unsigned char* process_post(unsigned char* buffer, unsigned int length)
 {
-	return "dummy";
+	// assuming that token is not set and header is 4 bytes
+	unsigned int header_len = 4;
+	bool host_processed = false;
+
+	char* get_path = malloc(sizeof(unsigned char) * BUFFER_SIZE);;
+	unsigned int get_path_iterator = 0;
+	unsigned int last_delta = 0;
+	int opt_delta_sum = 0;
+
+	for(int i = header_len; i < header_len + length;) {
+		last_delta = buffer[i] >> 4;
+		opt_delta_sum += last_delta;
+		printf("\nopt delta sum: %d\n", opt_delta_sum);
+		if(last_delta == 13) {
+			i++;
+			opt_delta_sum += buffer[i];
+			printf("\nopt delta sum inside IF: %d\n", opt_delta_sum);
+		}
+		// check for block indicator
+		if(opt_delta_sum == 27) {
+			printf("\n\n FOUND BLOCK INDICATOR \n\n");
+		}
+		// check for uri_host option
+		if((last_delta == 3) && !host_processed) {
+			host_processed = true;
+			unsigned int ext_uri_length = 0;
+			unsigned int regular_uri_length = buffer[i] & 0x0f;
+			if(regular_uri_length == 13) {
+				i++;
+				ext_uri_length = buffer[i];
+			}
+			unsigned int whole_length = regular_uri_length + ext_uri_length;
+			i++;
+			for(int n = 0; n < whole_length; n++) {
+				get_path[get_path_iterator] = buffer[i];
+				i++;
+				get_path_iterator++;
+			}
+			get_path[get_path_iterator] = '/';
+			get_path_iterator++;
+		} else if(buffer[i]) {
+			unsigned int ext_uri_length = 0;
+			unsigned int regular_uri_length = buffer[i] & 0x0f;
+			if(regular_uri_length == 13) {
+				i++;
+				ext_uri_length = buffer[i];
+			}
+			unsigned int whole_length = regular_uri_length + ext_uri_length;
+			i++;
+			for(int n = 0; n < whole_length; n++) {
+				get_path[get_path_iterator] = buffer[i];
+				i++;
+				get_path_iterator++;
+			}
+			get_path[get_path_iterator] = '/';
+			get_path_iterator++;
+		} else {
+			break;
+		}
+	}
+	//delete last slash
+	get_path[--get_path_iterator] = '\0';
+	return get_path;
 }
 
 int16_t get_temperature_value(struct Resources* resources)
