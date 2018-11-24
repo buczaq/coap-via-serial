@@ -57,6 +57,5 @@ int main(int argc, char *argv[])
 	printf("Response: %s\n", response);
 	int bytes_written = write(accsckt, response, 4);
 	printf("Responded with %d byte(s).\n", bytes_written);
-	sleep(1);
 	}
 }

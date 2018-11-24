@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #include "constant.h"
 

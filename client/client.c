@@ -13,6 +13,9 @@
 
 int main(int argc, char *argv[])
 {	
+	// CoAP resources
+	struct Resources resources = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
+
 	const char* device = argv[1];
 	int fd;
 
@@ -54,8 +57,7 @@ int main(int argc, char *argv[])
 		printf("\n");
 		coap_msg_raw = data_to_coap(data, &length);
 		coap_msg = process_coap(coap_msg_raw, length);
-		check_resources_and_send_response(fd, coap_msg);
-		sleep(1);
+		check_resources_and_send_response(fd, coap_msg, &resources);
 	}
 	close(fd);
 }

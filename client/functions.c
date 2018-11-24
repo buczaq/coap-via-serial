@@ -14,13 +14,6 @@
 #include "constant.h"
 #include "functions.h"
 
-struct Resources {
-	char* temperature;
-	char* humidity;
-	int16_t temperature_value;
-	int16_t humidity_value;
-};
-
 bool open_device(int* fd, const char* device)
 {
 	*fd = open(device,O_RDWR | O_NOCTTY);
@@ -158,26 +151,23 @@ unsigned char* process_post(unsigned char* buffer, unsigned int length)
 	return "dummy";
 }
 
-int16_t get_temperature_value()
+int16_t get_temperature_value(struct Resources* resources)
 {
-	struct Resources r = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
-	return r.temperature_value;
+	return resources->temperature_value;
 }
-int16_t get_humidity_value()
+int16_t get_humidity_value(struct Resources* resources)
 {
-	struct Resources r = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
-	return r.humidity_value;
+	return resources->humidity_value;
 }
 
-void check_resources_and_send_response(int fd, unsigned char* message)
+void check_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources)
 {
-	struct Resources r = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
 	uint16_t resource_to_send;
-	if(strcmp(message, r.temperature) == 0) {
-		resource_to_send = get_temperature_value();
+	if(strcmp(message, resources->temperature) == 0) {
+		resource_to_send = get_temperature_value(resources);
 		printf("Sending temperature: \"%d\"...\n", resource_to_send);
-	} else if(strcmp(message, r.humidity) == 0) {
-		resource_to_send = get_humidity_value();
+	} else if(strcmp(message, resources->humidity) == 0) {
+		resource_to_send = get_humidity_value(resources);
 		printf("Sending humidity: \"%d\"...\n", resource_to_send);
 	}
 	unsigned char* write_buffer = malloc(sizeof(unsigned char) * 4);
