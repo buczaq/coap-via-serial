@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/build/run_tests.dir/unit_tests.cpp.o CMakeFiles/build/run_tests.dir/home/buczak/Inzynierka/coap-via-serial/server/functions.c.o  -o build/run_tests -Wl,-Bstatic -lgtest -Wl,-Bdynamic -lpthread 

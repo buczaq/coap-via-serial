@@ -13,9 +13,9 @@
 
 #include "functions.h"
 
-unsigned char* create_message_with_header(char* buffer)
+unsigned char* create_message_with_header(unsigned char* buffer)
 {
-	unsigned char* message_with_header = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned char* message_with_header = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	unsigned int coap_size = count_actual_buffer_size(buffer);
 	message_with_header[0] = 0xa1;
 
@@ -53,7 +53,7 @@ unsigned int count_actual_buffer_size(unsigned char* buffer)
 		size++;
 	}
 
-	return size + 1;
+	return size;
 }
 
 unsigned int count_whole_message_size(unsigned char* buffer)
@@ -96,7 +96,7 @@ char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 	// reading data that has just been sent in order to ignore it
 	read(sckt, tmp_buffer, count_whole_message_size(buffer));
 
-	char* response = malloc(sizeof(char) * 4);
+	char* response = (char*)malloc(sizeof(char) * 4);
 
 	read(sckt, response, 4);
 
@@ -108,7 +108,7 @@ char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 
 unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 {
-	unsigned char* buffer = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned char* buffer = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 
 	struct sockaddr_storage src_addr;
 	socklen_t src_addr_len=sizeof(src_addr);
@@ -137,13 +137,13 @@ MessageType recognize_http_message_type(char* http_message)
 	} else if (strcmp(type, "POS") == 0) {
 		return POST;
 	}
-	return true;
+	else return GET;
 }
 
 unsigned char* http_to_coap(char* http_message)
 {
 	MessageType message_type = recognize_http_message_type(http_message);
-	unsigned char* message_to_send = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned char* message_to_send = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	switch (message_type)
 	{
 		case GET:
@@ -160,7 +160,7 @@ unsigned char* http_to_coap(char* http_message)
 
 unsigned char* process_http_get(char* message)
 {
-	unsigned char* coap_get = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned char* coap_get = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
 	//assuming no token
 	coap_get[0] = 64; // CoAP version 1, confirmable, no token
@@ -252,7 +252,7 @@ unsigned char* process_http_get(char* message)
 unsigned char* process_http_post(char* message)
 {
 	printf("\n\n\n%s\n\n\n", message);
-	unsigned char* coap_post = malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned char* coap_post = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
 	//assuming no token
 	coap_post[0] = 64; // CoAP version 1, confirmable, no token

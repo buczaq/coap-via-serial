@@ -9,7 +9,7 @@
 
 #include "constant.h"
 
-unsigned char* create_message_with_header(char* buffer);
+unsigned char* create_message_with_header(unsigned char* buffer);
 char* send_coap_to_port_and_wait_for_response(unsigned char* buffer);
 unsigned char* http_to_coap(char* http_message);
 unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt);

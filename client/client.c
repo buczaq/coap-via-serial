@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 		unsigned char* data;
 		unsigned char* coap_msg_raw;
 		unsigned int length = 0;
-		unsigned char* coap_msg;
+		char* coap_msg;
 		unsigned char post_payload[PAYLOAD_SIZE];
 		for(int i = 0; i < PAYLOAD_SIZE; i++) {
 			post_payload[i] = '\0';
