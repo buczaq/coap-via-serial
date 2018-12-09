@@ -89,7 +89,8 @@ char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
     	printf("failed to create address (err = %d)",err);
 	}
 	connect(sckt, res->ai_addr, res->ai_addrlen);
-	write(sckt, buffer, count_whole_message_size(buffer));
+	int write_bytes = write(sckt, buffer, count_whole_message_size(buffer));
+	printf("Sent %d bytes.\n", write_bytes);
 
 	char* tmp_buffer;
 
@@ -373,8 +374,3 @@ unsigned char* process_http_post(char* message)
 
 	return coap_post;
 }
-
-//2 params(uart) 4 bytes per value --rs-> 
-
-
-//ser2net

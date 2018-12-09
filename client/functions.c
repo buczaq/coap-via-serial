@@ -166,7 +166,7 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 		}
 		// check for block indicator
 		if(opt_delta_sum == 27) {
-			// very ugly workaround where we ignore block info and just go for data
+			// ignore block info and just go for data
 			while(buffer[i] != 0xff) {
 				i++;
 			}

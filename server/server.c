@@ -14,8 +14,8 @@
 int main(int argc, char *argv[])
 {
 	const char* hostname = "0.0.0.0";
-	const char* portname = "8001";
-	const char* uart_portname = "9001";
+	const char* portname = argv[1] ? argv[1] : "8001";
+	const char* uart_portname = argv[2] ? argv[2] : "9001";
 
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
