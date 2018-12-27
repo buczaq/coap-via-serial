@@ -28,20 +28,25 @@ int main(int argc, char *argv[])
 
 	tcgetattr(fd, &SerialPortSettings);
 
-	cfsetispeed(&SerialPortSettings,B115200);
-	cfsetospeed(&SerialPortSettings,B115200);
+	cfsetispeed(&SerialPortSettings,B38400);
+	cfsetospeed(&SerialPortSettings,B38400);
 
 	SerialPortSettings.c_cflag &= ~PARENB;
+	//SerialPortSettings.c_cflag &= ~CSTOPB;
 	SerialPortSettings.c_cflag &= ~CSIZE;
 	SerialPortSettings.c_cflag |= CS8;
+	//SerialPortSettings.c_cflag &= ~CRTSCTS;
+	//SerialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY);
+	SerialPortSettings.c_iflag &= IXANY;
 
 	SerialPortSettings.c_cflag |= CREAD | CLOCAL;
 
-	SerialPortSettings.c_iflag &= IXANY;
 	SerialPortSettings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 
 
 	SerialPortSettings.c_oflag &= ~OPOST;
+
+	tcsetattr(fd, TCSANOW, &SerialPortSettings);
 
 	while(true) {
 		//initializing new variables every time

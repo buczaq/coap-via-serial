@@ -34,8 +34,10 @@ unsigned char* receive_data(int fd)
 	unsigned char read_buffer[256] = { '\0' };
 	int bytes_read = 0;
 	while(read_buffer[0] != 0xa1) {
-		bytes_read = read(fd, &read_buffer, BUFFER_SIZE);
+		bytes_read = read(fd, &read_buffer, 1);
 	}
+	sleep(1);
+	bytes_read = read(fd, &read_buffer[1], BUFFER_SIZE);
 	for(int i = 0; i < bytes_read; i++) {
 		read_buffer_to_return[i] = read_buffer[i];
 	}
@@ -91,7 +93,6 @@ char* process_coap(unsigned char* buffer, unsigned int length, char* post_payloa
 	return message_to_send;
 }
 
-// TODO: add processing logic
 char* process_get(unsigned char* buffer, unsigned int length)
 {
 	// assuming that token is not set and header is 4 bytes

@@ -91,11 +91,22 @@ char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 	connect(sckt, res->ai_addr, res->ai_addrlen);
 	int write_bytes = write(sckt, buffer, count_whole_message_size(buffer));
 	printf("Sent %d bytes.\n", write_bytes);
+	char* feed = "\n";
+	write(sckt, feed, 1);
 
 	char* tmp_buffer;
+	//char* tmp_feed;
+
+	//tcflush(sckt, TCIOFLUSH);
 
 	// reading data that has just been sent in order to ignore it
 	read(sckt, tmp_buffer, count_whole_message_size(buffer));
+	//read(sckt, tmp_feed, 1);
+
+	//usleep(10000);
+	//tcflush(sckt, TCIOFLUSH);
+
+	//tcdrain(sckt);
 
 	char* response = (char*)malloc(sizeof(char) * 4);
 

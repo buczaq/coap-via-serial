@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
 	}
 	printf("\n");
 	response = send_coap_to_port_and_wait_for_response(coap_message_with_header);
-	printf("Response: %s\n", response);
+	printf("Response: %s", response);
+	for(int i = 0; i < 4; i++) printf("%d", (unsigned int)response[i]);
 	int bytes_written = write(accsckt, response, 4);
 	printf("Responded with %d byte(s).\n", bytes_written);
 	}
