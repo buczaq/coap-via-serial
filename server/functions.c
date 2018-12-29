@@ -94,14 +94,23 @@ char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 	char* feed = "\n";
 	write(sckt, feed, 1);
 
-	char* tmp_buffer;
-	//char* tmp_feed;
+	unsigned char* tmp_buffer = (char*)malloc(sizeof(char) * 256);
+	tmp_buffer[0] = '9';
+	//unsigned char* tmp_buffer2;
+	//unsigned char* tmp_buffer3;
+	char* tmp_feed;
 
 	//tcflush(sckt, TCIOFLUSH);
 
 	// reading data that has just been sent in order to ignore it
-	read(sckt, tmp_buffer, count_whole_message_size(buffer));
-	//read(sckt, tmp_feed, 1);
+	//do {
+	//	printf("\nweszlo\n");
+	while(tmp_buffer[0] != 0xa1) {
+		read(sckt, tmp_buffer, 1);
+	}
+	read(sckt, tmp_buffer, count_whole_message_size(buffer) - 1);
+	//} while(tmp_buffer[0] == 0xa1);
+	read(sckt, tmp_feed, 1);
 
 	//usleep(10000);
 	//tcflush(sckt, TCIOFLUSH);
