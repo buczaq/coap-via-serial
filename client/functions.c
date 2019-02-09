@@ -18,11 +18,11 @@ bool open_device(int* fd, const char* device)
 {
 	*fd = open(device,O_RDWR | O_NOCTTY);
 	if(*fd > 0) {
-		printf("\nDevice %s opened successfully\n", device);
+		printf("[INF] Device %s opened successfully\n", device);
 		return true;
 	}
 	else {
-		printf("\nError in opening device, aborting...\n");
+		printf("[INF] Error in opening device, aborting...\n");
 		return false;
 	}
 }
@@ -36,7 +36,7 @@ unsigned char* receive_data(int fd)
 	while(read_buffer[0] != 0xa1) {
 		bytes_read = read(fd, &read_buffer, 1);
 	}
-	sleep(1);
+	//sleep(1);
 	bytes_read = read(fd, &read_buffer[1], BUFFER_SIZE);
 	for(int i = 0; i < bytes_read; i++) {
 		read_buffer_to_return[i] = read_buffer[i];
@@ -44,12 +44,11 @@ unsigned char* receive_data(int fd)
 	return read_buffer_to_return;
 }
 
-unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length)
+unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DEBUG_FLAG)
 {
 	int source[2] = { 0 };
 	int destination[2] = { 0 };
 	unsigned int ext_len_base = 0;
-	//printf("%d", (unsigned int) buffer[0]);
 	if(buffer[0] == 0xa1) {
 		*length = (unsigned int)buffer[1];
 		if(*length == 0) {
@@ -65,13 +64,15 @@ unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length)
 	for(int i = 0; i < *length; i++) {
 		coap_msg[i] = buffer[6 + i + ext_len_base];
 	}
-	/*printf("[DBG] Received message: ");
-	for(int i = 0; i < *length; i++) {
-		printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
+	if(DEBUG_FLAG) {
+		printf("[DBG] Received message: ");
+		for(int i = 0; i < *length; i++) {
+			printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
+		}
+		printf("\n");
 	}
-	printf("\n");*/
-	return coap_msg;
-	//printf("\nSource: %d.%d\nDestination: %d.%d", source[0], source[1], destination[0], destination[1]);
+	printf("[INF] Source: %d.%d\nDestination: %d.%d\n", source[0], source[1], destination[0], destination[1]);
+		return coap_msg;
 }
 
 char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload)
@@ -253,10 +254,10 @@ void check_resources_and_send_response(int fd, unsigned char* message, struct Re
 	int16_t resource_to_send;
 	if(strcmp((const char*)message, resources->temperature) == 0) {
 		resource_to_send = get_temperature_value(resources);
-		printf("Sending temperature: \"%d\"...\n", resource_to_send);
+		printf("[INF] Sending temperature: \"%d\"...\n", resource_to_send);
 	} else if(strcmp((const char*)message, resources->humidity) == 0) {
 		resource_to_send = get_humidity_value(resources);
-		printf("Sending humidity: \"%d\"...\n", resource_to_send);
+		printf("[INF] Sending humidity: \"%d\"...\n", resource_to_send);
 	}
 	char* write_buffer = (char*)malloc(sizeof(unsigned char) * 4);
 	for(int i = 0; i < 4; i++) {
@@ -268,19 +269,21 @@ void check_resources_and_send_response(int fd, unsigned char* message, struct Re
 	int bytes_written = 0;
 
 	bytes_written = write(fd, write_buffer, 4);
-	printf("bytes written: %d\n", bytes_written);
+	printf("[INF] Bytes written: %d\n", bytes_written);
 }
 
-void set_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, char* post_payload)
+void set_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, char* post_payload, bool DEBUG_FLAG)
 {
 	int16_t resource_to_set = (int)strtol(post_payload, (char **)NULL, 10);
-	printf("\n[DBG] Post payload is: %d\n", resource_to_set);
+	if(DEBUG_FLAG) {
+		printf("\n[DBG] Post payload is: %d\n", resource_to_set);
+	}
 	if(strcmp((const char*)message, resources->temperature) == 0) {
 		resource_to_set = set_temperature_value(resources, resource_to_set);
-		printf("Setting temperature to: \"%d\"...\n", resource_to_set);
+		printf("[INF] Setting temperature to: \"%d\"...\n", resource_to_set);
 	} else if(strcmp((const char*)message, resources->humidity) == 0) {
 		resource_to_set = set_humidity_value(resources, resource_to_set);
-		printf("Setting humidity to: \"%d\"...\n", resource_to_set);
+		printf("[INF] Setting humidity to: \"%d\"...\n", resource_to_set);
 	}
 
 	char* write_buffer = (char*)malloc(sizeof(unsigned char) * 4);
@@ -293,5 +296,5 @@ void set_resources_and_send_response(int fd, unsigned char* message, struct Reso
 	int bytes_written = 0;
 
 	bytes_written = write(fd, write_buffer, 4);
-	printf("bytes written: %d\n", bytes_written);
+	printf("[INF] Bytes written: %d\n", bytes_written);
 }

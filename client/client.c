@@ -1,10 +1,8 @@
 #include <stdio.h>
-#include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <errno.h>
-#include <string.h>
 #include <netdb.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/uio.h>
@@ -12,8 +10,17 @@
 #include "functions.h"
 #include "constant.h"
 
+bool DEBUG_FLAG;
+
 int main(int argc, char *argv[])
 {	
+	if(strcmp(argv[2], "debug") == 0) {
+		DEBUG_FLAG = true;
+		printf("[DBG] Debug mode turned ON\n");
+	} else {
+		DEBUG_FLAG = false;
+	}
+
 	// CoAP resources
 	struct Resources resources = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
 
@@ -60,17 +67,20 @@ int main(int argc, char *argv[])
 		}
 
 		data = receive_data(fd);
-		printf("[DBG]Received:\n");
-		for(int i = 0; i < 25; i++) {
-			printf("%d ", data[i]);
+		if(DEBUG_FLAG) {
+			printf("[INF] Received:\n");
+			for(int i = 0; i < 40; i++) {
+				printf("%d ", data[i]);
+			}
+			printf("\n");
 		}
-		printf("\n");
-		coap_msg_raw = data_to_coap(data, &length);
+
+		coap_msg_raw = data_to_coap(data, &length, DEBUG_FLAG);
 		coap_msg = process_coap(coap_msg_raw, length, post_payload);
 		if(!post_payload[0]) {
 			check_resources_and_send_response(fd, coap_msg, &resources);
 		} else {
-			set_resources_and_send_response(fd, coap_msg, &resources, post_payload);
+			set_resources_and_send_response(fd, coap_msg, &resources, post_payload, DEBUG_FLAG);
 		}
 	}
 	close(fd);

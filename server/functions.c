@@ -13,6 +13,19 @@
 
 #include "functions.h"
 
+bool open_device(int* fd, const char* device)
+{
+	*fd = open(device,O_RDWR | O_NOCTTY);
+	if(*fd > 0) {
+		printf("[INF] Device %s opened successfully\n", device);
+		return true;
+	}
+	else {
+		printf("[ERR] Error in opening device, aborting...\n");
+		return false;
+	}
+}
+
 unsigned char* create_message_with_header(unsigned char* buffer)
 {
 	unsigned char* message_with_header = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -70,7 +83,7 @@ unsigned int count_whole_message_size(unsigned char* buffer)
 	return size + 1;
 }
 
-char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
+char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer)
 {
 	const char* hostname = "0.0.0.0";
 	const char* portname = "9001";
@@ -82,15 +95,15 @@ char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 	struct addrinfo* res = 0;
 	int err=getaddrinfo(hostname, portname, &hints, &res);
 	if (err!=0) {
-		printf("failed to resolve local socket address (err = %d)",err);
+		printf("[ERR] Failed to resolve local socket address (err = %d)",err);
 	}
 	int sckt = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sckt == -1) {
-    	printf("failed to create address (err = %d)",err);
+    	printf("[ERR] Failed to create address (err = %d)",err);
 	}
 	connect(sckt, res->ai_addr, res->ai_addrlen);
 	int write_bytes = write(sckt, buffer, count_whole_message_size(buffer));
-	printf("Sent %d bytes.\n", write_bytes);
+	printf("[INF] Sent %d bytes.\n", write_bytes);
 	char* feed = "\n";
 	write(sckt, feed, 1);
 
@@ -118,6 +131,18 @@ char* send_coap_to_port_and_wait_for_response(unsigned char* buffer)
 	return response;
 }
 
+char* send_coap_to_raw_device_and_wait_for_response(int fd, unsigned char* buffer)
+{
+	int bytes_written = 0;
+
+	bytes_written = write(fd, buffer, count_whole_message_size(buffer));
+	printf("[INF] Bytes written: %d\n", bytes_written);
+	//sleep(1);
+	char* response = (char*)malloc(sizeof(char) * 4);
+	read(fd, response, 4);
+	return response;
+}
+
 unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 {
 	unsigned char* buffer = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -131,9 +156,9 @@ unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 	if (count == -1) {
 		printf("%s",strerror(errno));
 	} else if (count==sizeof(buffer)) {
-		printf("datagram too large for buffer: truncated");
+		printf("[WRN] datagram too large for buffer: truncated");
 	} else {
-		printf("\nSucessfully received message\n");
+		printf("\n[INF] Sucessfully received message\n");
 	}
 
 	//freeaddrinfo(res);

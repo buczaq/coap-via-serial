@@ -35,7 +35,7 @@ TEST(ut_server, convert_message_to_bytes)
 
 TEST(ut_client, unpack_coap_message)
 {
-    ASSERT_STREQ((char*)data_to_coap(constant::byte_message_with_header, &constant::dummy_length), (char*)constant::byte_message);
+    ASSERT_STREQ((char*)data_to_coap(constant::byte_message_with_header, &constant::dummy_length, false), (char*)constant::byte_message);
 }
 
 TEST(ut_client, get_payload_ok)
