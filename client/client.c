@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	}
 
 	// CoAP resources
-	struct Resources resources = { "0.0.0.0/temperature", "0.0.0.0/humidity", 23, 71 };
+	struct Resources resources = { "temperature", "humidity", 23, 71 };
 
 	const char* device = argv[1];
 	int fd;

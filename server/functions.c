@@ -146,8 +146,32 @@ char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer)
 	return response;
 }
 
-char* send_coap_to_raw_device_and_wait_for_response(int fd, unsigned char* buffer)
+char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination)
 {
+	int fd;
+
+	if(!open_device(&fd, destination)) {
+		return "";
+	}
+
+	fcntl(fd, F_SETFL, 0);
+	struct termios SerialPortSettings;
+	tcgetattr(fd, &SerialPortSettings);
+
+	cfsetispeed(&SerialPortSettings,B38400);
+	cfsetospeed(&SerialPortSettings,B38400);
+
+	SerialPortSettings.c_cflag &= ~PARENB;
+	SerialPortSettings.c_cflag &= ~CSIZE;
+	SerialPortSettings.c_cflag |= CS8;
+	SerialPortSettings.c_iflag &= IXANY;
+
+	SerialPortSettings.c_cflag |= CREAD | CLOCAL;
+
+	SerialPortSettings.c_oflag &= ~OPOST;
+
+	tcsetattr(fd, TCSANOW, &SerialPortSettings);
+
 	int bytes_written = 0;
 
 	bytes_written = write(fd, buffer, count_whole_message_size(buffer));
@@ -206,17 +230,17 @@ MessageType recognize_http_message_type(char* http_message)
 	else return GET;
 }
 
-unsigned char* http_to_coap(char* http_message)
+unsigned char* http_to_coap(char* http_message, struct Device* devices, char* destination)
 {
 	MessageType message_type = recognize_http_message_type(http_message);
 	unsigned char* message_to_send = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	switch (message_type)
 	{
 		case GET:
-			message_to_send = process_http_get(http_message);
+			message_to_send = process_http_get(http_message, devices, destination);
 			break;
 		case POST:
-			message_to_send = process_http_post(http_message);
+			message_to_send = process_http_post(http_message, devices, destination);
 			break;
 		default:
 			break;
@@ -224,7 +248,18 @@ unsigned char* http_to_coap(char* http_message)
 	return message_to_send;
 }
 
-unsigned char* process_http_get(char* message)
+char* look_for_device(struct Device* devices, char* destination)
+{
+	for(int i = 0; i < 16; i++) {
+		if(strcmp(devices[i].alias, destination) == 0) {
+			return devices[i].location;
+		}
+	}
+
+	return "";
+}
+
+unsigned char* process_http_get(char* message, struct Device* devices, char* destination)
 {
 	unsigned char* coap_get = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
@@ -278,6 +313,7 @@ unsigned char* process_http_get(char* message)
 				host_is_specified = true;
 				for(int m = 0; m < current_part_length; m++) {
 					coap_get[coap_index] = url[url_index];
+					destination[m] = url[url_index];
 					url_index++;
 					coap_index++;
 				}
@@ -315,7 +351,7 @@ unsigned char* process_http_get(char* message)
 }
 
 // TODO
-unsigned char* process_http_post(char* message)
+unsigned char* process_http_post(char* message, struct Device* devices, char* destination)
 {
 	printf("\n\n\n%s\n\n\n", message);
 	unsigned char* coap_post = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -372,6 +408,7 @@ unsigned char* process_http_post(char* message)
 				host_is_specified = true;
 				for(int m = 0; m < current_part_length; m++) {
 					coap_post[coap_index] = url[url_index];
+					destination[m] = url[url_index];
 					url_index++;
 					coap_index++;
 				}

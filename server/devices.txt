@@ -1,1 +1,1 @@
-rpi	1	/dev/ttyUSB0
+/virtual.uart	1	/dev/pts/4

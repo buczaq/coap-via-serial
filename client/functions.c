@@ -145,7 +145,6 @@ char* process_get(unsigned char* buffer, unsigned int length)
 	return get_path;
 }
 
-// TODO: add processing logic
 char* process_post(unsigned char* buffer, unsigned int length, char* post_payload)
 {
 	// assuming that token is not set and header is 4 bytes
@@ -250,10 +249,10 @@ int16_t set_humidity_value(struct Resources* resources, int16_t value)
 void check_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources)
 {
 	int16_t resource_to_send;
-	if(strcmp((const char*)message, resources->temperature) == 0) {
+	if(strstr((const char*)message, resources->temperature) != NULL) {
 		resource_to_send = get_temperature_value(resources);
 		printf("[INF] Sending temperature: \"%d\"...\n", resource_to_send);
-	} else if(strcmp((const char*)message, resources->humidity) == 0) {
+	} else if(strstr((const char*)message, resources->humidity) != NULL) {
 		resource_to_send = get_humidity_value(resources);
 		printf("[INF] Sending humidity: \"%d\"...\n", resource_to_send);
 	}
@@ -276,10 +275,10 @@ void set_resources_and_send_response(int fd, unsigned char* message, struct Reso
 	if(DEBUG_FLAG) {
 		printf("\n[DBG] Post payload is: %d\n", resource_to_set);
 	}
-	if(strcmp((const char*)message, resources->temperature) == 0) {
+	if(strstr((const char*)message, resources->temperature) != NULL) {
 		resource_to_set = set_temperature_value(resources, resource_to_set);
 		printf("[INF] Setting temperature to: \"%d\"...\n", resource_to_set);
-	} else if(strcmp((const char*)message, resources->humidity) == 0) {
+	} else if(strstr((const char*)message, resources->humidity) != NULL) {
 		resource_to_set = set_humidity_value(resources, resource_to_set);
 		printf("[INF] Setting humidity to: \"%d\"...\n", resource_to_set);
 	}

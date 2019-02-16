@@ -26,9 +26,6 @@ int main(int argc, char *argv[])
 	char* hostname = (char*)calloc(BUFFER_SIZE, sizeof(char));
 	char* portname = (char*)calloc(5, sizeof(char));
 	char* uart_portname = (char*)calloc(5, sizeof(char));
-	char* device = (char*)calloc(24, sizeof(char));
-	int fd;
-	struct termios SerialPortSettings;
 	ConnectionType connection_type;
 	if(strcmp(argv[1], "raw") == 0) {
 		connection_type = RAW;
@@ -46,29 +43,7 @@ int main(int argc, char *argv[])
 
 	else if(connection_type == RAW) {
 		portname = argv[2] ? argv[2] : "8001";
-		device = argv[3] ? argv[3] : "dev/ttyUSB0";
-		if(!open_device(&fd, device)) {
-			return -1;
-		}
-		hostname = argv[4] ? argv[4] : "0.0.0.0";
-
-		fcntl(fd, F_SETFL, 0);
-
-		tcgetattr(fd, &SerialPortSettings);
-
-		cfsetispeed(&SerialPortSettings,B38400);
-		cfsetospeed(&SerialPortSettings,B38400);
-
-		SerialPortSettings.c_cflag &= ~PARENB;
-		SerialPortSettings.c_cflag &= ~CSIZE;
-		SerialPortSettings.c_cflag |= CS8;
-		SerialPortSettings.c_iflag &= IXANY;
-
-		SerialPortSettings.c_cflag |= CREAD | CLOCAL;
-
-		SerialPortSettings.c_oflag &= ~OPOST;
-
-		tcsetattr(fd, TCSANOW, &SerialPortSettings);
+		hostname = argv[3] ? argv[3] : "0.0.0.0";
 	}
 
 	struct Device* devices = malloc(16 * sizeof(struct Device));
@@ -101,10 +76,11 @@ int main(int argc, char *argv[])
 		unsigned char* http_message;
 		unsigned char* coap_message;
 		unsigned char* coap_message_with_header;
+		char destination[32] = { "\0" };
 		char* response;
 
 		http_message = listen_for_http(sckt, res, accsckt);
-		coap_message = http_to_coap(http_message);
+		coap_message = http_to_coap(http_message, devices, destination);
 		coap_message_with_header = create_message_with_header(coap_message);
 		if(DEBUG_FLAG) {
 			printf("[DBG] Sending:\n");
@@ -118,8 +94,9 @@ int main(int argc, char *argv[])
 			case SER2NET:
 				response = send_coap_to_ser2net_port_and_wait_for_response(coap_message_with_header);
 				break;
-			case RAW:
-				response = send_coap_to_raw_device_and_wait_for_response(fd, coap_message_with_header);
+			case RAW: ;
+				char* device = look_for_device(devices, destination);
+				response = send_coap_to_raw_device_and_wait_for_response(coap_message_with_header, device);
 				break;
 			default:
 				break;			
@@ -131,5 +108,5 @@ int main(int argc, char *argv[])
 			printf("[INF] Responded with %d byte(s).\n", bytes_written);
 		}
 	}
-	close(fd);
+	//close(fd);
 }
