@@ -26,6 +26,30 @@ bool open_device(int* fd, const char* device)
 	}
 }
 
+void read_devices_list(struct Device* devices)
+{
+	FILE* fid;
+
+	fid = fopen("devices.txt","r");
+	char alias[100];
+	int address;
+	char location[100];
+
+	int counter = 0;
+
+	while (!feof(fid))
+	{
+		fscanf(fid, "%s\t%d\t%s", alias, &address, location); // alias, address, location
+		strcpy(devices[counter].alias, alias);
+		devices[counter].address = address;
+		strcpy(devices[counter].location, location);
+	}
+
+	//printf("\n%s %d %s\n", alias, address, location);
+
+	fclose(fid);
+}
+
 unsigned char* create_message_with_header(unsigned char* buffer)
 {
 	unsigned char* message_with_header = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -108,18 +132,9 @@ char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer)
 	write(sckt, feed, 1);
 
 	char* tmp_buffer;
-	//char* tmp_feed;
-
-	//tcflush(sckt, TCIOFLUSH);
 
 	// reading data that has just been sent in order to ignore it
 	read(sckt, tmp_buffer, count_whole_message_size(buffer));
-	//read(sckt, tmp_feed, 1);
-
-	//usleep(10000);
-	//tcflush(sckt, TCIOFLUSH);
-
-	//tcdrain(sckt);
 
 	char* response = (char*)malloc(sizeof(char) * 4);
 
@@ -136,10 +151,25 @@ char* send_coap_to_raw_device_and_wait_for_response(int fd, unsigned char* buffe
 	int bytes_written = 0;
 
 	bytes_written = write(fd, buffer, count_whole_message_size(buffer));
+
 	printf("[INF] Bytes written: %d\n", bytes_written);
-	//sleep(1);
+
 	char* response = (char*)malloc(sizeof(char) * 4);
-	read(fd, response, 4);
+
+	struct timeval tv;
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+	fd_set fd_to_check;
+	FD_SET(fd, &fd_to_check);
+
+	int check_availability = select(fd+1, &fd_to_check, NULL, NULL, &tv);
+
+	if(check_availability) {
+		read(fd, response, 4);
+	}
+	else {
+		printf("[WRN] Response has not been received! System might become unstable!");
+	}
 	return response;
 }
 
@@ -161,7 +191,6 @@ unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 		printf("\n[INF] Sucessfully received message\n");
 	}
 
-	//freeaddrinfo(res);
 	return buffer;
 }
 

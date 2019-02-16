@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
 	char* uart_portname = (char*)calloc(5, sizeof(char));
 	char* device = (char*)calloc(24, sizeof(char));
 	int fd;
+	struct termios SerialPortSettings;
 	ConnectionType connection_type;
 	if(strcmp(argv[1], "raw") == 0) {
 		connection_type = RAW;
@@ -43,14 +44,36 @@ int main(int argc, char *argv[])
 		hostname = argv[4] ? argv[4] : "0.0.0.0";
 	}
 
-	else if(connection_type = RAW) {
+	else if(connection_type == RAW) {
 		portname = argv[2] ? argv[2] : "8001";
 		device = argv[3] ? argv[3] : "dev/ttyUSB0";
 		if(!open_device(&fd, device)) {
 			return -1;
 		}
 		hostname = argv[4] ? argv[4] : "0.0.0.0";
+
+		fcntl(fd, F_SETFL, 0);
+
+		tcgetattr(fd, &SerialPortSettings);
+
+		cfsetispeed(&SerialPortSettings,B38400);
+		cfsetospeed(&SerialPortSettings,B38400);
+
+		SerialPortSettings.c_cflag &= ~PARENB;
+		SerialPortSettings.c_cflag &= ~CSIZE;
+		SerialPortSettings.c_cflag |= CS8;
+		SerialPortSettings.c_iflag &= IXANY;
+
+		SerialPortSettings.c_cflag |= CREAD | CLOCAL;
+
+		SerialPortSettings.c_oflag &= ~OPOST;
+
+		tcsetattr(fd, TCSANOW, &SerialPortSettings);
 	}
+
+	struct Device* devices = malloc(16 * sizeof(struct Device));
+
+	read_devices_list(devices);
 
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -97,6 +120,7 @@ int main(int argc, char *argv[])
 				break;
 			case RAW:
 				response = send_coap_to_raw_device_and_wait_for_response(fd, coap_message_with_header);
+				break;
 			default:
 				break;			
 		}
@@ -107,4 +131,5 @@ int main(int argc, char *argv[])
 			printf("[INF] Responded with %d byte(s).\n", bytes_written);
 		}
 	}
+	close(fd);
 }

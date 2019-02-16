@@ -29,14 +29,12 @@ bool open_device(int* fd, const char* device)
 
 unsigned char* receive_data(int fd)
 {
-	tcflush(fd, TCIFLUSH);
 	unsigned char* read_buffer_to_return = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	unsigned char read_buffer[256] = { '\0' };
 	int bytes_read = 0;
 	while(read_buffer[0] != 0xa1) {
 		bytes_read = read(fd, &read_buffer, 1);
 	}
-	//sleep(1);
 	bytes_read = read(fd, &read_buffer[1], BUFFER_SIZE);
 	for(int i = 0; i < bytes_read; i++) {
 		read_buffer_to_return[i] = read_buffer[i];
@@ -294,7 +292,6 @@ void set_resources_and_send_response(int fd, unsigned char* message, struct Reso
 	sprintf(write_buffer, "%d", resource_to_set);
 
 	int bytes_written = 0;
-
 	bytes_written = write(fd, write_buffer, 4);
 	printf("[INF] Bytes written: %d\n", bytes_written);
 }

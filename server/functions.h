@@ -15,6 +15,12 @@ typedef enum EConnectionType
 	RAW = 2
 } ConnectionType;
 
+struct Device {
+	char alias[16];
+	int16_t address;
+	char location[32];
+};
+
 unsigned char* create_message_with_header(unsigned char* buffer);
 char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer);
 char* send_coap_to_raw_device_and_wait_for_response(int fd, unsigned char* buffer);
@@ -34,5 +40,6 @@ unsigned int count_actual_buffer_size(unsigned char* buffer);
 unsigned int count_whole_message_size(unsigned char* buffer);
 uint16_t receive_response(const char* host, const char* port);
 bool open_device(int* fd, const char* device);
+void read_devices_list(struct Device* devices);
 
 #endif // _functions_H_
