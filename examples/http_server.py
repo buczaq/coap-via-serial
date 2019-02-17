@@ -18,7 +18,7 @@ class MyHandler(BaseHTTPRequestHandler):
         self._set_headers()
 
     def do_GET(self):
-        request = "GET " + self.path + " "
+        request = "GET " + self.path[1:] + " "
         global s
         s.send(request.encode())
         response = s.recv(1024)
@@ -28,7 +28,7 @@ class MyHandler(BaseHTTPRequestHandler):
         return
 
     def do_POST(self):
-        request = "POST " + self.path + " "
+        request = "POST " + self.path[1:] + " "
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         print(post_data)

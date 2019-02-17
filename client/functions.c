@@ -164,9 +164,7 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 			opt_delta_sum += buffer[i];
 		}
 		// check for block indicator
-		printf("\n\n%d\n\n", opt_delta_sum);
 		if(opt_delta_sum == 27) {
-			printf("\n\n opt delta jest 27\n\n");
 			// ignore block info and just go for data
 			while(buffer[i] != 0xff) {
 				i++;
@@ -174,7 +172,6 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 			i++;
 			int j = 0;
 			while(buffer[i] != '\0') {
-				printf("\n\n payload wypelniany %c\n\n", buffer[i]);
 				post_payload[j] = buffer[i];
 				i++;
 				j++;
