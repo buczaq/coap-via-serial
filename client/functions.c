@@ -75,7 +75,7 @@ unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DE
 
 char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload)
 {
-	char* message_to_send = (char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned char* message_to_send = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 
 	switch(buffer[1])
 	{
@@ -164,7 +164,9 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 			opt_delta_sum += buffer[i];
 		}
 		// check for block indicator
+		printf("\n\n%d\n\n", opt_delta_sum);
 		if(opt_delta_sum == 27) {
+			printf("\n\n opt delta jest 27\n\n");
 			// ignore block info and just go for data
 			while(buffer[i] != 0xff) {
 				i++;
@@ -172,12 +174,11 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 			i++;
 			int j = 0;
 			while(buffer[i] != '\0') {
-				printf("dbg1");
+				printf("\n\n payload wypelniany %c\n\n", buffer[i]);
 				post_payload[j] = buffer[i];
 				i++;
 				j++;
 			}
-			printf("dbg2");
 			break;
 		}
 		// check for uri_host option
@@ -220,8 +221,6 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 	}
 	//delete last slash
 	get_path[--get_path_iterator] = '\0';
-
-	printf("\npath post:%s\n", get_path);
 
 	return get_path;
 }

@@ -73,11 +73,11 @@ int main(int argc, char *argv[])
 	int accsckt = accept(sckt, (struct sockaddr *) &res->ai_addr, &res->ai_addrlen);
 	while(true) {
 		printf("[INF] Initializing new sequence...\n");
-		unsigned char* http_message;
+		char* http_message;
 		unsigned char* coap_message;
 		unsigned char* coap_message_with_header;
 		char destination[32] = { "\0" };
-		char* response;
+		unsigned char* response;
 
 		http_message = listen_for_http(sckt, res, accsckt);
 		coap_message = http_to_coap(http_message, devices, destination);
@@ -92,7 +92,8 @@ int main(int argc, char *argv[])
 		switch(connection_type)
 		{
 			case SER2NET:
-				response = send_coap_to_ser2net_port_and_wait_for_response(coap_message_with_header);
+				printf("[WRN] ser2net implementation is incomplete and might be UNSTABLE!");
+				response = send_coap_to_ser2net_port_and_wait_for_response(coap_message_with_header, hostname, uart_portname);
 				break;
 			case RAW: ;
 				char* device = look_for_device(devices, destination);

@@ -22,10 +22,10 @@ struct Device {
 };
 
 unsigned char* create_message_with_header(unsigned char* buffer);
-char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer);
-char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination);
+unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer, char* hostname, char* portname);
+unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination);
 unsigned char* http_to_coap(char* http_message, struct Device* devices, char* destination);
-unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt);
+char* listen_for_http(int sckt, struct addrinfo* res, int accsckt);
 
 typedef enum EMessageType
 {

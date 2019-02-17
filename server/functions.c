@@ -107,10 +107,8 @@ unsigned int count_whole_message_size(unsigned char* buffer)
 	return size + 1;
 }
 
-char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer)
+unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer, char* hostname, char* portname)
 {
-	const char* hostname = "0.0.0.0";
-	const char* portname = "9001";
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
@@ -136,7 +134,7 @@ char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer)
 	// reading data that has just been sent in order to ignore it
 	read(sckt, tmp_buffer, count_whole_message_size(buffer));
 
-	char* response = (char*)malloc(sizeof(char) * 4);
+	unsigned char* response = (char*)malloc(sizeof(char) * 4);
 
 	read(sckt, response, 4);
 
@@ -146,7 +144,7 @@ char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer)
 	return response;
 }
 
-char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination)
+unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination)
 {
 	int fd;
 
@@ -178,7 +176,7 @@ char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char*
 
 	printf("[INF] Bytes written: %d\n", bytes_written);
 
-	char* response = (char*)malloc(sizeof(char) * 4);
+	unsigned char* response = (char*)malloc(sizeof(char) * 4);
 
 	struct timeval tv;
 	tv.tv_sec = 1;
@@ -197,7 +195,7 @@ char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char*
 	return response;
 }
 
-unsigned char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
+char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 {
 	unsigned char* buffer = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 
@@ -350,7 +348,6 @@ unsigned char* process_http_get(char* message, struct Device* devices, char* des
 	return coap_get;
 }
 
-// TODO
 unsigned char* process_http_post(char* message, struct Device* devices, char* destination)
 {
 	printf("\n\n\n%s\n\n\n", message);
