@@ -1,14 +1,10 @@
 #include <stdio.h>
-#include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <netdb.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/uio.h>
 #include <stdlib.h>
+#include <netdb.h>
 
 #include "functions.h"
 
@@ -109,5 +105,4 @@ int main(int argc, char *argv[])
 			printf("[INF] Responded with %d byte(s).\n", bytes_written);
 		}
 	}
-	//close(fd);
 }

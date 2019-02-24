@@ -1,11 +1,7 @@
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
-#include <netdb.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/uio.h>
 
 #include "functions.h"
 #include "constant.h"
@@ -39,11 +35,8 @@ int main(int argc, char *argv[])
 	cfsetospeed(&SerialPortSettings,B38400);
 
 	SerialPortSettings.c_cflag &= ~PARENB;
-	//SerialPortSettings.c_cflag &= ~CSTOPB;
 	SerialPortSettings.c_cflag &= ~CSIZE;
 	SerialPortSettings.c_cflag |= CS8;
-	//SerialPortSettings.c_cflag &= ~CRTSCTS;
-	//SerialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY);
 	SerialPortSettings.c_iflag &= IXANY;
 
 	SerialPortSettings.c_cflag |= CREAD | CLOCAL;

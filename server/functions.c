@@ -5,11 +5,8 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netdb.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/uio.h>
-#include <sys/types.h>
+#include <netdb.h>
 
 #include "functions.h"
 
@@ -39,13 +36,11 @@ void read_devices_list(struct Device* devices)
 
 	while (!feof(fid))
 	{
-		fscanf(fid, "%s\t%d\t%s", alias, &address, location); // alias, address, location
+		fscanf(fid, "%s\t%d\t%s", alias, &address, location);
 		strcpy(devices[counter].alias, alias);
 		devices[counter].address = address;
 		strcpy(devices[counter].location, location);
 	}
-
-	//printf("\n%s %d %s\n", alias, address, location);
 
 	fclose(fid);
 }
@@ -192,6 +187,9 @@ unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buff
 	else {
 		printf("[WRN] Response has not been received! System might become unstable!");
 	}
+
+	close(fd);
+
 	return response;
 }
 
@@ -280,7 +278,6 @@ unsigned char* process_http_get(char* message, struct Device* devices, char* des
 
 	while(!time_to_break) {
 		url[i - 4] = message[i];
-		//printf("%c", message[i])
 		i++;
 		current_part_length++;
 		whole_url_length++;
@@ -350,7 +347,6 @@ unsigned char* process_http_get(char* message, struct Device* devices, char* des
 
 unsigned char* process_http_post(char* message, struct Device* devices, char* destination)
 {
-	printf("\n\n\n%s\n\n\n", message);
 	unsigned char* coap_post = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
 	//assuming no token
@@ -373,7 +369,6 @@ unsigned char* process_http_post(char* message, struct Device* devices, char* de
 
 	while(!time_to_break) {
 		url[i - 5] = message[i];
-		//printf("%c", message[i])
 		i++;
 		current_part_length++;
 		whole_url_length++;

@@ -2,14 +2,8 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/uio.h>
-#include <sys/types.h>
 
 #include "constant.h"
 #include "functions.h"
