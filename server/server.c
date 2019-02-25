@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <time.h>
 
 #include "functions.h"
 
@@ -12,6 +13,8 @@ bool DEBUG_FLAG;
 
 int main(int argc, char *argv[])
 {
+	srand(time(NULL));
+
 	if(strcmp(argv[5], "debug") == 0) {
 		DEBUG_FLAG = true;
 		printf("[DBG] Debug mode turned ON\n");

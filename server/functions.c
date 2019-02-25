@@ -349,14 +349,16 @@ unsigned char* process_http_post(char* message, struct Device* devices, char* de
 {
 	unsigned char* coap_post = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
-	//assuming no token
-	coap_post[0] = 64; // CoAP version 1, confirmable, no token
+	// 2 bytes long token
+	coap_post[0] = 64 + 2; // CoAP version 1, confirmable, 2 byte token
 	coap_post[1] = 2; // POST
-	coap_post[2] = 123; // message_id p1
-	coap_post[3] = 12; // message_id p2
+	coap_post[2] = rand() % 256;; // message_id p1
+	coap_post[3] = rand() % 256;; // message_id p2
+	coap_post[4] = rand() % 256; // token 1
+	coap_post[5] = rand() % 256; // token 2
 
 	int i = 5;
-	int coap_index = 4;
+	int coap_index = 4 + 2; // 2 for token
 	char url[128] = { '\0' };
 	bool host_is_specified = false;
 	int opt_delta = 0;

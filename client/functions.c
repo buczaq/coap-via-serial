@@ -141,8 +141,8 @@ char* process_get(unsigned char* buffer, unsigned int length)
 
 char* process_post(unsigned char* buffer, unsigned int length, char* post_payload)
 {
-	// assuming that token is not set and header is 4 bytes
-	unsigned int header_len = 4;
+	// assuming that token is 2 bytes long and whole header is 5 bytes
+	unsigned int header_len = 6;
 	bool host_processed = false;
 
 	char* get_path = (char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
