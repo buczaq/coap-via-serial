@@ -10,6 +10,12 @@ struct Resources {
 	int16_t humidity_value;
 };
 
+struct MessageData {
+	char device_name[24];
+	unsigned char message_id[2];
+	unsigned char token[2];
+};
+
 bool open_device(int* fd, const char* device);
 unsigned char* receive_data(int fd);
 unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DEBUG_FLAG);

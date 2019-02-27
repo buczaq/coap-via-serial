@@ -216,6 +216,13 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 	return get_path;
 }
 
+void save_message_parameters(struct MessageData* message_data, char* device_name, unsigned char* message_id, unsigned char* token)
+{
+	strcpy(message_data->device_name, device_name);
+	strcpy(message_data->message_id, message_id);
+	strcpy(message_data->token, token);
+}
+
 int16_t get_temperature_value(struct Resources* resources)
 {
 	return resources->temperature_value;
