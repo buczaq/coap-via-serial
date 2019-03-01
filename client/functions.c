@@ -67,17 +67,17 @@ unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DE
 		return coap_msg;
 }
 
-char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload)
+char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data)
 {
 	unsigned char* message_to_send = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 
 	switch(buffer[1])
 	{
 		case 1:
-			message_to_send = process_get(buffer, length);
+			message_to_send = process_get(buffer, length, message_data);
 			break;
 		case 2:
-			message_to_send = process_post(buffer, length, post_payload);
+			message_to_send = process_post(buffer, length, post_payload, message_data);
 			break;
 		default:
 			break;
@@ -86,14 +86,16 @@ char* process_coap(unsigned char* buffer, unsigned int length, char* post_payloa
 	return message_to_send;
 }
 
-char* process_get(unsigned char* buffer, unsigned int length)
+char* process_get(unsigned char* buffer, unsigned int length, struct MessageData* message_data)
 {
 	// assuming that token is not set and header is 4 bytes
-	unsigned int header_len = 4;
+	unsigned int header_len = 6;
 	bool host_processed = false;
 
 	char* get_path = (char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);;
 	unsigned int get_path_iterator = 0;
+
+	save_message_parameters(message_data, &buffer[2], &buffer[4]);
 
 	for(int i = header_len; i < header_len + length;) {
 		// check for uri_host option
@@ -139,16 +141,18 @@ char* process_get(unsigned char* buffer, unsigned int length)
 	return get_path;
 }
 
-char* process_post(unsigned char* buffer, unsigned int length, char* post_payload)
+char* process_post(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data)
 {
 	// assuming that token is 2 bytes long and whole header is 5 bytes
 	unsigned int header_len = 6;
 	bool host_processed = false;
 
-	char* get_path = (char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
-	unsigned int get_path_iterator = 0;
+	char* post_path = (char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	unsigned int post_path_iterator = 0;
 	unsigned int last_delta = 0;
 	int opt_delta_sum = 0;
+
+	save_message_parameters(message_data, &buffer[2], &buffer[4]);
 
 	for(int i = header_len; i < header_len + length;) {
 		last_delta = buffer[i] >> 4;
@@ -184,12 +188,12 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 			unsigned int whole_length = regular_uri_length + ext_uri_length;
 			i++;
 			for(int n = 0; n < whole_length; n++) {
-				get_path[get_path_iterator] = buffer[i];
+				post_path[post_path_iterator] = buffer[i];
 				i++;
-				get_path_iterator++;
+				post_path_iterator++;
 			}
-			get_path[get_path_iterator] = '/';
-			get_path_iterator++;
+			post_path[post_path_iterator] = '/';
+			post_path_iterator++;
 		} else if(buffer[i]) {
 			unsigned int ext_uri_length = 0;
 			unsigned int regular_uri_length = buffer[i] & 0x0f;
@@ -200,27 +204,28 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 			unsigned int whole_length = regular_uri_length + ext_uri_length;
 			i++;
 			for(int n = 0; n < whole_length; n++) {
-				get_path[get_path_iterator] = buffer[i];
+				post_path[post_path_iterator] = buffer[i];
 				i++;
-				get_path_iterator++;
+				post_path_iterator++;
 			}
-			get_path[get_path_iterator] = '/';
-			get_path_iterator++;
+			post_path[post_path_iterator] = '/';
+			post_path_iterator++;
 		} else {
 			break;
 		}
 	}
 	//delete last slash
-	get_path[--get_path_iterator] = '\0';
+	post_path[--post_path_iterator] = '\0';
 
-	return get_path;
+	return post_path;
 }
 
-void save_message_parameters(struct MessageData* message_data, char* device_name, unsigned char* message_id, unsigned char* token)
+void save_message_parameters(struct MessageData* message_data, unsigned char* message_id, unsigned char* token)
 {
-	strcpy(message_data->device_name, device_name);
-	strcpy(message_data->message_id, message_id);
-	strcpy(message_data->token, token);
+	message_data->message_id[0] = message_id[0];
+	message_data->message_id[1] = message_id[1];
+	message_data->token[0] = token[0];
+	message_data->token[1] = token[1];
 }
 
 int16_t get_temperature_value(struct Resources* resources)

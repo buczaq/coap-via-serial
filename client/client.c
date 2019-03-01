@@ -20,6 +20,9 @@ int main(int argc, char *argv[])
 	// CoAP resources
 	struct Resources resources = { "temperature", "humidity", 23, 71 };
 
+	// CoAP message data got from server
+	struct MessageData message_data;
+
 	const char* device = argv[1];
 	int fd;
 
@@ -69,7 +72,7 @@ int main(int argc, char *argv[])
 		}
 
 		coap_msg_raw = data_to_coap(data, &length, DEBUG_FLAG);
-		coap_msg = process_coap(coap_msg_raw, length, post_payload);
+		coap_msg = process_coap(coap_msg_raw, length, post_payload, &message_data);
 		if(!post_payload[0]) {
 			check_resources_and_send_response(fd, coap_msg, &resources);
 		} else {

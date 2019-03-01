@@ -11,7 +11,6 @@ struct Resources {
 };
 
 struct MessageData {
-	char device_name[24];
 	unsigned char message_id[2];
 	unsigned char token[2];
 };
@@ -19,9 +18,10 @@ struct MessageData {
 bool open_device(int* fd, const char* device);
 unsigned char* receive_data(int fd);
 unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DEBUG_FLAG);
-char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload);
-char* process_get(unsigned char* buffer, unsigned int length);
-char* process_post(unsigned char* buffer, unsigned int length, char* post_payload);
+char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data);
+char* process_get(unsigned char* buffer, unsigned int length, struct MessageData* message_data);
+char* process_post(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data);
+void save_message_parameters(struct MessageData* message_data, unsigned char* message_id, unsigned char* token);
 
 int16_t get_temperature_value(struct Resources* resources);
 int16_t get_humidity_value(struct Resources* resources);
