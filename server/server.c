@@ -18,13 +18,6 @@ int main(int argc, char *argv[])
 
 	struct MessageData message_data;
 
-	if(strcmp(argv[5], "debug") == 0) {
-		DEBUG_FLAG = true;
-		printf("[DBG] Debug mode turned ON\n");
-	} else {
-		DEBUG_FLAG = false;
-	}
-
 	char* hostname = (char*)calloc(BUFFER_SIZE, sizeof(char));
 	char* portname = (char*)calloc(5, sizeof(char));
 	char* uart_portname = (char*)calloc(5, sizeof(char));
@@ -41,11 +34,23 @@ int main(int argc, char *argv[])
 		portname = argv[2] ? argv[2] : "8001";
 		uart_portname = argv[3] ? argv[3] : "9001";
 		hostname = argv[4] ? argv[4] : "0.0.0.0";
+		if(strcmp(argv[5], "debug") == 0) {
+			DEBUG_FLAG = true;
+			printf("[DBG] Debug mode turned ON\n");
+		} else {
+			DEBUG_FLAG = false;
+		}
 	}
 
 	else if(connection_type == RAW) {
 		portname = argv[2] ? argv[2] : "8001";
 		hostname = argv[3] ? argv[3] : "0.0.0.0";
+		if(strcmp(argv[4], "debug") == 0) {
+			DEBUG_FLAG = true;
+			printf("[DBG] Debug mode turned ON\n");
+		} else {
+			DEBUG_FLAG = false;
+		}
 	}
 
 	struct Device* devices = malloc(16 * sizeof(struct Device));
@@ -105,10 +110,10 @@ int main(int argc, char *argv[])
 			default:
 				break;			
 		}
-		// value = validate_message_and_extract_value(response, &message_data);
-		printf("[INF] Response: %s", response);
-		for(int i = 0; i < 4; i++) printf("%d", (unsigned int)response[i]);
-		int bytes_written = write(accsckt, response, 4);
+		value = validate_message_and_extract_value(response, &message_data, DEBUG_FLAG);
+		printf("[INF] Response: %s", value);
+		for(int i = 0; i < PAYLOAD_SIZE; i++) printf("%d", (unsigned int)value[i]);
+		int bytes_written = write(accsckt, value, PAYLOAD_SIZE);
 		if(DEBUG_FLAG) {
 			printf("[INF] Responded with %d byte(s).\n", bytes_written);
 		}

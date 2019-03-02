@@ -35,7 +35,7 @@ unsigned char* http_to_coap(char* http_message, struct Device* devices, char* de
 
 unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer, char* hostname, char* portname);
 unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination);
-char* validate_message_and_extract_value(unsigned char* response, struct MessageData* message_data);
+char* validate_message_and_extract_value(unsigned char* response, struct MessageData* message_data, bool DEBUG_FLAG);
 uint16_t receive_response(const char* host, const char* port);
 
 unsigned char* process_http_get(char* message, struct Device* devices, char* destination, struct MessageData* message_data);

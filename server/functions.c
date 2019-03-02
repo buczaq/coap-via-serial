@@ -114,7 +114,7 @@ unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buff
 
 	printf("[INF] Bytes written: %d\n", bytes_written);
 
-	unsigned char* response = (char*)malloc(sizeof(char) * 4);
+	unsigned char* response = (char*)malloc(sizeof(char) * BUFFER_SIZE);
 
 	struct timeval tv;
 	tv.tv_sec = 1;
@@ -125,7 +125,7 @@ unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buff
 	int check_availability = select(fd+1, &fd_to_check, NULL, NULL, &tv);
 
 	if(check_availability) {
-		read(fd, response, 4);
+		read(fd, response, BUFFER_SIZE);
 	}
 	else {
 		printf("[WRN] Response has not been received! System might become unstable!");
@@ -426,13 +426,29 @@ unsigned char* process_http_post(char* message, struct Device* devices, char* de
 	return coap_post;
 }
 
-char* validate_message_and_extract_value(unsigned char* response, struct MessageData* message_data)
+char* validate_message_and_extract_value(unsigned char* response, struct MessageData* message_data, bool DEBUG_FLAG)
 {
-	if(response[2] == message_data->message_id[0] &&
-	   response[3] == message_data->message_id[1] &&
-	   response[4] == message_data->token[0] &&
-	   response[5] == message_data->token[1])
-	{
-		
+	if(DEBUG_FLAG) {
+		printf("[DBG] Received CoAP response:\n");
+		for(int i = 0; i < 32; i++) {
+			printf("[%d]:%d(%c)\t", i, (unsigned int)response[i], response[i]);
+		}
+		printf("\n");
 	}
+	unsigned int length;
+	char* value = (char*)malloc(sizeof(char) * PAYLOAD_SIZE);
+	unsigned char* message = data_to_coap(response, &length, DEBUG_FLAG);
+	if(message[2] == message_data->message_id[0] &&
+	   message[3] == message_data->message_id[1] &&
+	   message[4] == message_data->token[0] &&
+	   message[5] == message_data->token[1])
+	{
+		for(int i = 7; i < length + 7; i++) {
+			value[i - 7] = message[i];
+		}
+
+		return value;
+	}
+	printf("[ERR] Received incorrect message!\n");
+	exit(1);
 }

@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
 		coap_msg_raw = data_to_coap(data, &length, DEBUG_FLAG);
 		coap_msg = process_coap(coap_msg_raw, length, post_payload, &message_data);
 		if(!post_payload[0]) {
-			check_resources_and_send_response(fd, coap_msg, &resources);
+			check_resources_and_send_response(fd, coap_msg, &resources, &message_data);
 		} else {
-			set_resources_and_send_response(fd, coap_msg, &resources, post_payload, DEBUG_FLAG);
+			set_resources_and_send_response(fd, coap_msg, &resources, post_payload, DEBUG_FLAG, &message_data);
 		}
 	}
 	close(fd);

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../common/common.h"
 #include "functions.h"
 
 bool open_device(int* fd, const char* device)
@@ -35,37 +36,6 @@ unsigned char* receive_data(int fd)
 	return read_buffer_to_return;
 }
 
-unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DEBUG_FLAG)
-{
-	int source[2] = { 0 };
-	int destination[2] = { 0 };
-	unsigned int ext_len_base = 0;
-	if(buffer[0] == 0xa1) {
-		*length = (unsigned int)buffer[1];
-		if(*length == 0) {
-			ext_len_base = 2;
-			*length = (unsigned int)buffer[2] + (unsigned int)buffer[3];
-		}
-		source[0] = (unsigned int)buffer[2 + ext_len_base];
-		source[1] = (unsigned int)buffer[3 + ext_len_base];
-		destination[0] = (unsigned int)buffer[4 + ext_len_base];
-		destination[1] = (unsigned int)buffer[5 + ext_len_base];
-	}
-	unsigned char* coap_msg = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
-	for(int i = 0; i < *length; i++) {
-		coap_msg[i] = buffer[6 + i + ext_len_base];
-	}
-	if(DEBUG_FLAG) {
-		printf("[DBG] Received message: ");
-		for(int i = 0; i < *length; i++) {
-			printf("[%i]:%d(%c)\t", i, (unsigned int)coap_msg[i], coap_msg[i]);
-		}
-		printf("\n");
-	}
-	printf("[INF] Source: %d.%d\nDestination: %d.%d\n", source[0], source[1], destination[0], destination[1]);
-		return coap_msg;
-}
-
 char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data)
 {
 	unsigned char* message_to_send = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -87,7 +57,7 @@ char* process_coap(unsigned char* buffer, unsigned int length, char* post_payloa
 
 char* process_get(unsigned char* buffer, unsigned int length, struct MessageData* message_data)
 {
-	// assuming that token is not set and header is 4 bytes
+	// assuming that token is 2 bytes long
 	unsigned int header_len = 6;
 	bool host_processed = false;
 
@@ -247,7 +217,7 @@ int16_t set_humidity_value(struct Resources* resources, int16_t value)
 	return resources->humidity_value;
 }
 
-void check_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources)
+void check_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, struct MessageData* message_data)
 {
 	int16_t resource_to_send;
 	if(strstr((const char*)message, resources->temperature) != NULL) {
@@ -257,20 +227,22 @@ void check_resources_and_send_response(int fd, unsigned char* message, struct Re
 		resource_to_send = get_humidity_value(resources);
 		printf("[INF] Sending humidity: \"%d\"...\n", resource_to_send);
 	}
-	char* write_buffer = (char*)malloc(sizeof(unsigned char) * 4);
+	char* response = (char*)malloc(sizeof(unsigned char) * 4);
 	for(int i = 0; i < 4; i++) {
-		write_buffer[i] = '\0';
+		response[i] = '\0';
 	}
 
-	sprintf(write_buffer, "%d", resource_to_send);
+	sprintf(response, "%d", resource_to_send);
+
+	unsigned char* coap_response = build_coap_response_with_header(message_data, response);
+	int response_length = count_whole_message_size(coap_response);
 
 	int bytes_written = 0;
-
-	bytes_written = write(fd, write_buffer, 4);
+	bytes_written = write(fd, coap_response, response_length);
 	printf("[INF] Bytes written: %d\n", bytes_written);
 }
 
-void set_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, char* post_payload, bool DEBUG_FLAG)
+void set_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, char* post_payload, bool DEBUG_FLAG, struct MessageData* message_data)
 {
 	int16_t resource_to_set = (int)strtol(post_payload, (char **)NULL, 10);
 	if(DEBUG_FLAG) {
@@ -284,14 +256,36 @@ void set_resources_and_send_response(int fd, unsigned char* message, struct Reso
 		printf("[INF] Setting humidity to: \"%d\"...\n", resource_to_set);
 	}
 
-	char* write_buffer = (char*)malloc(sizeof(unsigned char) * 4);
+	char* response = (char*)malloc(sizeof(unsigned char) * 4);
 	for(int i = 0; i < 4; i++) {
-		write_buffer[i] = '\0';
+		response[i] = '\0';
 	}
 
-	sprintf(write_buffer, "%d", resource_to_set);
+	sprintf(response, "%d", resource_to_set);
+
+	unsigned char* coap_response = build_coap_response_with_header(message_data, response);
+	int response_length = count_whole_message_size(coap_response);
 
 	int bytes_written = 0;
-	bytes_written = write(fd, write_buffer, 4);
+	bytes_written = write(fd, coap_response, response_length);
 	printf("[INF] Bytes written: %d\n", bytes_written);
+}
+
+unsigned char* build_coap_response_with_header(struct MessageData* message_data, char* response)
+{
+	unsigned char* message = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	message[0] = 62; // CoAP version 1, ACK, token length 2
+	message[1] = 69; // 2.05 Content marker
+	message[2] = message_data->message_id[0];
+	message[3] = message_data->message_id[1];
+	message[4] = message_data->token[0];
+	message[5] = message_data->token[1];
+	message[6] = 255; // end of options marker
+	for(int i = 0; i < PAYLOAD_SIZE; i++) {
+		message[i + 7] = response[i];
+	}
+
+	unsigned char* message_with_header = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	message_with_header = create_message_with_header(message);
+	return message_with_header;
 }
