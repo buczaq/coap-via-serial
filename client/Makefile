@@ -1,3 +1,3 @@
-client: client.c constant.h functions.c functions.h
-	gcc client.c constant.h functions.c functions.h -o build/client
+client: client.c functions.c functions.h
+	gcc client.c functions.c functions.h -o build/client
 

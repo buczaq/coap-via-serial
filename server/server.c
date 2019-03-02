@@ -8,7 +8,7 @@
 #include <time.h>
 
 #include "functions.h"
-#include "../common/MessageData.h"
+#include "../common/common.h"
 
 bool DEBUG_FLAG;
 
@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
 		unsigned char* coap_message_with_header;
 		char destination[32] = { "\0" };
 		unsigned char* response;
+		char* value;
 
 		http_message = listen_for_http(sckt, res, accsckt);
 		coap_message = http_to_coap(http_message, devices, destination, &message_data);
@@ -104,6 +105,7 @@ int main(int argc, char *argv[])
 			default:
 				break;			
 		}
+		// value = validate_message_and_extract_value(response, &message_data);
 		printf("[INF] Response: %s", response);
 		for(int i = 0; i < 4; i++) printf("%d", (unsigned int)response[i]);
 		int bytes_written = write(accsckt, response, 4);

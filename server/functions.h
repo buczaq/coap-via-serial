@@ -5,8 +5,7 @@
 #include <stdint.h>
 #include <netdb.h>
 
-#include "constant.h"
-#include "../common/MessageData.h"
+#include "../common/common.h"
 
 typedef enum EConnectionType
 {
@@ -34,15 +33,12 @@ char* listen_for_http(int sckt, struct addrinfo* res, int accsckt);
 enum EMessageType recognize_http_message_type(char* http_message);
 unsigned char* http_to_coap(char* http_message, struct Device* devices, char* destination, struct MessageData* message_data);
 
-unsigned char* create_message_with_header(unsigned char* buffer);
 unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer, char* hostname, char* portname);
 unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination);
+char* validate_message_and_extract_value(unsigned char* response, struct MessageData* message_data);
 uint16_t receive_response(const char* host, const char* port);
 
 unsigned char* process_http_get(char* message, struct Device* devices, char* destination, struct MessageData* message_data);
 unsigned char* process_http_post(char* message, struct Device* devices, char* destination, struct MessageData* message_data);
-
-unsigned int count_actual_buffer_size(unsigned char* buffer);
-unsigned int count_whole_message_size(unsigned char* buffer);
 
 #endif // _functions_H_

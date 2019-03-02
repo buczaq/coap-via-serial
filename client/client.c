@@ -4,8 +4,7 @@
 #include <string.h>
 
 #include "functions.h"
-#include "constant.h"
-#include "../common/MessageData.h"
+#include "../common/common.h"
 
 bool DEBUG_FLAG;
 

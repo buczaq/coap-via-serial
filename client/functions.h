@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "../common/MessageData.h"
+#include "../common/common.h"
 
 struct Resources {
 	char* temperature;

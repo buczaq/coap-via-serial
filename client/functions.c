@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "constant.h"
 #include "functions.h"
 
 bool open_device(int* fd, const char* device)
