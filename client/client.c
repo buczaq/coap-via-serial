@@ -2,6 +2,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "functions.h"
 #include "../common/common.h"
@@ -53,10 +54,10 @@ int main(int argc, char *argv[])
 
 	while(true) {
 		//initializing new variables every time
-		unsigned char* data;
-		unsigned char* coap_msg_raw;
+		unsigned char* data = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+		unsigned char* coap_msg_raw = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 		unsigned int length = 0;
-		char* coap_msg;
+		char* coap_msg = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 		unsigned char post_payload[PAYLOAD_SIZE];
 		for(int i = 0; i < PAYLOAD_SIZE; i++) {
 			post_payload[i] = '\0';
@@ -78,6 +79,10 @@ int main(int argc, char *argv[])
 		} else {
 			set_resources_and_send_response(fd, coap_msg, &resources, post_payload, DEBUG_FLAG, &message_data);
 		}
+		
+		free(data);
+		free(coap_msg_raw);
+		free(coap_msg);
 	}
 	close(fd);
 }

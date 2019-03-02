@@ -72,7 +72,7 @@ unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* bu
 	// reading data that has just been sent in order to ignore it
 	read(sckt, tmp_buffer, count_whole_message_size(buffer));
 
-	unsigned char* response = (char*)malloc(sizeof(char) * 4);
+	unsigned char* response = (char*)malloc(sizeof(char) * PAYLOAD_SIZE);
 
 	read(sckt, response, 4);
 
@@ -450,5 +450,6 @@ char* validate_message_and_extract_value(unsigned char* response, struct Message
 		return value;
 	}
 	printf("[ERR] Received incorrect message!\n");
+	free(value);
 	exit(1);
 }

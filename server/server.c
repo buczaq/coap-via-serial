@@ -80,12 +80,12 @@ int main(int argc, char *argv[])
 	int accsckt = accept(sckt, (struct sockaddr *) &res->ai_addr, &res->ai_addrlen);
 	while(true) {
 		printf("[INF] Initializing new sequence...\n");
-		char* http_message;
-		unsigned char* coap_message;
-		unsigned char* coap_message_with_header;
+		char* http_message = (char*)malloc(sizeof(char) * BUFFER_SIZE);
+		unsigned char* coap_message = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+		unsigned char* coap_message_with_header = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 		char destination[32] = { "\0" };
-		unsigned char* response;
-		char* value;
+		unsigned char* response = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+		char* value = (unsigned char*)malloc(sizeof(unsigned char) * PAYLOAD_SIZE);
 
 		http_message = listen_for_http(sckt, res, accsckt);
 		coap_message = http_to_coap(http_message, devices, destination, &message_data);
@@ -117,5 +117,11 @@ int main(int argc, char *argv[])
 		if(DEBUG_FLAG) {
 			printf("[INF] Responded with %d byte(s).\n", bytes_written);
 		}
+
+		free(http_message);
+		free(coap_message);
+		free(coap_message_with_header);
+		free(response);
+		free(value);
 	}
 }

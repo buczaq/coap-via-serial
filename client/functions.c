@@ -61,7 +61,7 @@ char* process_get(unsigned char* buffer, unsigned int length, struct MessageData
 	unsigned int header_len = 6;
 	bool host_processed = false;
 
-	char* get_path = (char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);;
+	char* get_path = (char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	unsigned int get_path_iterator = 0;
 
 	save_message_parameters(message_data, &buffer[2], &buffer[4]);
@@ -240,6 +240,7 @@ void check_resources_and_send_response(int fd, unsigned char* message, struct Re
 	int bytes_written = 0;
 	bytes_written = write(fd, coap_response, response_length);
 	printf("[INF] Bytes written: %d\n", bytes_written);
+	free(response);
 }
 
 void set_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, char* post_payload, bool DEBUG_FLAG, struct MessageData* message_data)
@@ -269,6 +270,7 @@ void set_resources_and_send_response(int fd, unsigned char* message, struct Reso
 	int bytes_written = 0;
 	bytes_written = write(fd, coap_response, response_length);
 	printf("[INF] Bytes written: %d\n", bytes_written);
+	free(response);
 }
 
 unsigned char* build_coap_response_with_header(struct MessageData* message_data, char* response)
@@ -287,5 +289,6 @@ unsigned char* build_coap_response_with_header(struct MessageData* message_data,
 
 	unsigned char* message_with_header = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	message_with_header = create_message_with_header(message);
+	free(message);
 	return message_with_header;
 }
