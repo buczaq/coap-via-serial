@@ -8,12 +8,15 @@
 #include <time.h>
 
 #include "functions.h"
+#include "../common/MessageData.h"
 
 bool DEBUG_FLAG;
 
 int main(int argc, char *argv[])
 {
 	srand(time(NULL));
+
+	struct MessageData message_data;
 
 	if(strcmp(argv[5], "debug") == 0) {
 		DEBUG_FLAG = true;
@@ -79,7 +82,7 @@ int main(int argc, char *argv[])
 		unsigned char* response;
 
 		http_message = listen_for_http(sckt, res, accsckt);
-		coap_message = http_to_coap(http_message, devices, destination);
+		coap_message = http_to_coap(http_message, devices, destination, &message_data);
 		coap_message_with_header = create_message_with_header(coap_message);
 		if(DEBUG_FLAG) {
 			printf("[DBG] Sending:\n");

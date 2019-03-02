@@ -1,1 +1,1 @@
-virtual.uart	1	/dev/pts/1
+virtual.uart	1	/dev/pts/2

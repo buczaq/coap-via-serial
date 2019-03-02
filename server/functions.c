@@ -226,17 +226,17 @@ MessageType recognize_http_message_type(char* http_message)
 	else return GET;
 }
 
-unsigned char* http_to_coap(char* http_message, struct Device* devices, char* destination)
+unsigned char* http_to_coap(char* http_message, struct Device* devices, char* destination, struct MessageData* message_data)
 {
 	MessageType message_type = recognize_http_message_type(http_message);
 	unsigned char* message_to_send = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	switch (message_type)
 	{
 		case GET:
-			message_to_send = process_http_get(http_message, devices, destination);
+			message_to_send = process_http_get(http_message, devices, destination, message_data);
 			break;
 		case POST:
-			message_to_send = process_http_post(http_message, devices, destination);
+			message_to_send = process_http_post(http_message, devices, destination, message_data);
 			break;
 		default:
 			break;
@@ -255,18 +255,25 @@ char* look_for_device(struct Device* devices, char* destination)
 	return "";
 }
 
-unsigned char* process_http_get(char* message, struct Device* devices, char* destination)
+unsigned char* process_http_get(char* message, struct Device* devices, char* destination, struct MessageData* message_data)
 {
 	unsigned char* coap_get = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
 	//assuming no token
-	coap_get[0] = 64; // CoAP version 1, confirmable, no token
-	coap_get[1] = 1; // GET
-	coap_get[2] = 123; // message_id p1
-	coap_get[3] = 12; // message_id p2
+	coap_get[0] = 64 + 2; // CoAP version 1, confirmable, 2 byte token
+	coap_get[1] = 2; // POST
+	coap_get[2] = rand() % 256;; // message_id p1
+	coap_get[3] = rand() % 256;; // message_id p2
+	coap_get[4] = rand() % 256; // token 1
+	coap_get[5] = rand() % 256; // token 2
+
+	message_data->message_id[0] = coap_get[2];
+	message_data->message_id[1] = coap_get[3];
+	message_data->token[0] = coap_get[4];
+	message_data->token[1] = coap_get[5];
 
 	int i = 4;
-	int coap_index = 4;
+	int coap_index = 4 + 2;
 	char url[128] = { '\0' };
 	bool host_is_specified = false;
 	int opt_delta = 0;
@@ -345,7 +352,7 @@ unsigned char* process_http_get(char* message, struct Device* devices, char* des
 	return coap_get;
 }
 
-unsigned char* process_http_post(char* message, struct Device* devices, char* destination)
+unsigned char* process_http_post(char* message, struct Device* devices, char* destination, struct MessageData* message_data)
 {
 	unsigned char* coap_post = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 	// hardcoded values
@@ -356,6 +363,11 @@ unsigned char* process_http_post(char* message, struct Device* devices, char* de
 	coap_post[3] = rand() % 256;; // message_id p2
 	coap_post[4] = rand() % 256; // token 1
 	coap_post[5] = rand() % 256; // token 2
+
+	message_data->message_id[0] = coap_post[2];
+	message_data->message_id[1] = coap_post[3];
+	message_data->token[0] = coap_post[4];
+	message_data->token[1] = coap_post[5];
 
 	int i = 5;
 	int coap_index = 4 + 2; // 2 for token

@@ -3,16 +3,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../common/MessageData.h"
+
 struct Resources {
 	char* temperature;
 	char* humidity;
 	int16_t temperature_value;
 	int16_t humidity_value;
-};
-
-struct MessageData {
-	unsigned char message_id[2];
-	unsigned char token[2];
 };
 
 bool open_device(int* fd, const char* device);

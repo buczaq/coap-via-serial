@@ -5,6 +5,7 @@
 
 #include "functions.h"
 #include "constant.h"
+#include "../common/MessageData.h"
 
 bool DEBUG_FLAG;
 
