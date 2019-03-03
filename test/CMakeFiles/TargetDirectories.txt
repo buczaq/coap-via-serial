@@ -1,3 +1,0 @@
-/home/buczak/Inzynierka/coap-via-serial/test/CMakeFiles/rebuild_cache.dir
-/home/buczak/Inzynierka/coap-via-serial/test/CMakeFiles/build/run_tests.dir
-/home/buczak/Inzynierka/coap-via-serial/test/CMakeFiles/edit_cache.dir
