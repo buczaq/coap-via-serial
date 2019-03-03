@@ -10,6 +10,9 @@
 
 #include "functions.h"
 
+/**
+  * @brief Read devices list from a devices.txt file. Save them in memory and check after every HTTP server request.
+**/
 void read_devices_list(struct Device* devices)
 {
 	FILE* fid;
@@ -32,6 +35,11 @@ void read_devices_list(struct Device* devices)
 	fclose(fid);
 }
 
+/**
+  * @brief CURRENTLY MAY NOT WORK PROPERLY! Establish connection via ser2net. Send request and receive response.
+  * 
+  * @return CoAP response from client.
+**/
 unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* buffer, char* hostname, char* portname)
 {
 	struct addrinfo hints;
@@ -59,9 +67,9 @@ unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* bu
 	// reading data that has just been sent in order to ignore it
 	read(sckt, tmp_buffer, count_whole_message_size(buffer));
 
-	unsigned char* response = (unsigned char*)malloc(sizeof(unsigned char) * PAYLOAD_SIZE);
+	unsigned char* response = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 
-	read(sckt, response, 4);
+	read(sckt, response, BUFFER_SIZE);
 
 	close(sckt);
 	freeaddrinfo(res);
@@ -69,6 +77,11 @@ unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* bu
 	return response;
 }
 
+/**
+  * @brief Establish connection directly via device. Send request and receive response.
+  * 
+  * @return CoAP response from client.
+**/
 unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buffer, char* destination)
 {
 	int fd;
@@ -123,6 +136,11 @@ unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buff
 	return response;
 }
 
+/**
+  * @brief Establish connection directly via device. Send request and receive response.
+  * 
+  * @return CoAP response from client.
+**/
 char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 {
 	char* buffer = (char*)malloc(sizeof(char) * BUFFER_SIZE);
@@ -144,6 +162,9 @@ char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 	return buffer;
 }
 
+/**
+  * @brief Check whether received HTTP messageis POST or GET .
+**/
 MessageType recognize_http_message_type(char* http_message)
 {
 	char type[3];
@@ -156,6 +177,11 @@ MessageType recognize_http_message_type(char* http_message)
 	else return GET;
 }
 
+/**
+  * @brief Translate HTTP message to CoAP message.
+  * 
+  * @return CoAP message that should be sent to client.
+**/
 unsigned char* http_to_coap(char* http_message, struct Device* devices, char* destination, struct MessageData* message_data)
 {
 	MessageType message_type = recognize_http_message_type(http_message);
@@ -174,6 +200,11 @@ unsigned char* http_to_coap(char* http_message, struct Device* devices, char* de
 	return message_to_send;
 }
 
+/**
+  * @brief Search for device (reffered in HTTP request) in devices saved from devices.txt.
+  * 
+  * @return Device name.
+**/
 char* look_for_device(struct Device* devices, char* destination)
 {
 	for(int i = 0; i < 16; i++) {
@@ -185,6 +216,11 @@ char* look_for_device(struct Device* devices, char* destination)
 	exit(1);
 }
 
+/**
+  * @brief Create CoAP GET from HTTP GET.
+  * 
+  * @return CoAP message to send to client.
+**/
 unsigned char* process_http_get(char* message, struct Device* devices, char* destination, struct MessageData* message_data)
 {
 	unsigned char* coap_get = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -282,6 +318,11 @@ unsigned char* process_http_get(char* message, struct Device* devices, char* des
 	return coap_get;
 }
 
+/**
+  * @brief Create CoAP POST from HTTP POST.
+  * 
+  * @return CoAP message to send to constrained device.
+**/
 unsigned char* process_http_post(char* message, struct Device* devices, char* destination, struct MessageData* message_data)
 {
 	unsigned char* coap_post = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -413,6 +454,11 @@ unsigned char* process_http_post(char* message, struct Device* devices, char* de
 	return coap_post;
 }
 
+/**
+  * @brief Check whether response from client is valid (same MID and token) or not. If is valid - extract value.
+  * 
+  * @return Value extracted from CoAP message - an actual "response" for HTTP server.
+**/
 char* validate_message_and_extract_value(unsigned char* response, struct MessageData* message_data, bool DEBUG_FLAG)
 {
 	if(DEBUG_FLAG) {

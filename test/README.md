@@ -1,22 +1,24 @@
 # CoAP via Serial
-### Testy jednostkowe
+### Unit Tests
 ------
-### Czym są testy?
-Testy sprawdzają poprawność implementacji za pomocą gtesta.
+### what is test?
+These are UTs that checks the correct behaviour of functions and modules.
 
-### Jak uruchomić?
-Testy budowane są poleceniami
+### How to run it?
+Test are built with
 ```
 cmake .
 make
 ```
-wywoływanym z folderu głównego testów. Plik wykonywalny ("run_tests") po zbudowaniu znajduje się w miejscu, w którym wywołano cmake. Sugeruje się stworzenie osobnego katalogu, np. "build", i wołanie stamtąd cmake'a poceleniem
+called from main test directory. The executable ("run_tests") would be placed in a directory where make has been called. Is is recommended to create a separate directory (eg. build) and store compilation result there by calling
 ```
 cmake ..
 ```
+from it.
 
-Testy uruchamiane są za pomocą polecenia
+Tests are ran with command
 ```
 ./run_tests
 ```
 
+Please note that for now Unit Tests does not cover some crucial cases and should be improved.

@@ -1,15 +1,16 @@
 # CoAP via Serial
-### Przykładowy serwer HTTP
+### Example HTTP server
 ------
-### Czym jest przykładowy serwer HTTP?
-Serwer HTTP pozwala klientowi na wysyłanie zapytań HTTP, które później trafią do serwera CoAP.
+### What is example HTTP server?
+HTTP server allows user to send requests that will be passed to CoAP server.
 
-### Jak uruchomić?
-Serwer HTTP napisany jest w pythonie i nie wymaga kompilacji. Aby uruchomić serwer HTTP, należy wydać komendę
+### How to run it?
+HTTP server is written in python and does not require compilation. In order to run HTTP server the user has to type
 ```
 ./http_server
 ```
-wywoływaną z folderu głównego examples.
+from main "examples" folder
 
-Serwer domyślnie działa na porcie 8000. Można to zmienić bezpośrednio w kodzie.
+Server is running on port 8000. It can be easily changed in a source code.
 
+Please note that this server is just an example and eventually should be replaced with some better solution.

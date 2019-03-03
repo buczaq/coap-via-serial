@@ -1,19 +1,24 @@
 # CoAP via Serial
-### Klient
+### Client
 ------
-### Czym jest klient?
-Klient jest klientem CoAP, uruchamianym na urządzeniach, którymi zarządza serwer CoAP.
+### What is a client?
+Client is a CoAP client that is supposed to be run od devices which are under CoAP server control.
 
-### Jak uruchomić?
-Klient budowany jest poleceniem
+### How to run it?
+Client is built with command
 ```
 make
 ```
-wywoływanym z folderu głównego klienta. Plik wykonywalny ("client") po zbudowaniu znajduje się w podfolderze "build". Może się zdarzyć, że podczas kompilacji folder ten nie zostanie stworzony -- należy wtedy utworzyć go ręcznie.
+called from main folder of the client. The executable file ("client") would be placed in "build" directory. There is a possibility that this folder does not exist and the compliation would fail - in that case it is neccessary to make this folder manually.
 
-Moduł uruchamiany jest za pomocą polecenia
+The compiled module (the executable file) is ran with command
 ```
-./build/client sciezka-do-urzadzenia
+./build/client device-path
 ```
-(zakładając, że użytkownik znajduje się w folderze client).
+(assuming that user is under "client" directory).
 
+in order to enable debugging information, it is necessary to add
+```
+debug
+```
+option at the end of running sequence.

@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+/**
+  * @brief Wrap CoAP message with shim header.
+**/
 unsigned char* create_message_with_header(unsigned char* buffer)
 {
 	unsigned char* message_with_header = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -19,7 +22,8 @@ unsigned char* create_message_with_header(unsigned char* buffer)
 		message_with_header[++ext_len_index] = coap_size;
 	}
 
-	//hardcoded values
+	// hardcoded values - potentially they could be filled with real value, but it is not necessary since we use alias
+	// in devices.txt read from server instead of address (which, just in case, is also included in this file, but not used).
 	message_with_header[++ext_len_index] = 128;
 	message_with_header[++ext_len_index] = 0;
 	message_with_header[++ext_len_index] = 129;
@@ -34,6 +38,9 @@ unsigned char* create_message_with_header(unsigned char* buffer)
 	return message_with_header;
 }
 
+/**
+  * @brief Count buffer size.
+**/
 unsigned int count_actual_buffer_size(unsigned char* buffer)
 {
 	unsigned int size = 0;
@@ -47,6 +54,9 @@ unsigned int count_actual_buffer_size(unsigned char* buffer)
 	return size;
 }
 
+/**
+  * @brief Count message size. Just in case - increase it by 1 since it's better to send a little too much info than not enough .
+**/
 unsigned int count_whole_message_size(unsigned char* buffer)
 {
 	unsigned int size = 0;
@@ -61,11 +71,17 @@ unsigned int count_whole_message_size(unsigned char* buffer)
 	return size + 1;
 }
 
+/**
+  * @brief Extract received data (message with shim header) and extract CoAP message only.
+  * 
+  * @return Raw CoAP message.
+**/
 unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DEBUG_FLAG)
 {
 	int source[2] = { 0 };
 	int destination[2] = { 0 };
 	unsigned int ext_len_base = 0;
+	// 0xa1 is a mark proposed in shim header draft (https://tools.ietf.org/html/draft-ikpark-core-shim-02) which indicates beginning of header
 	if(buffer[0] == 0xa1) {
 		*length = (unsigned int)buffer[1];
 		if(*length == 0) {
@@ -92,6 +108,9 @@ unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DE
 	return coap_msg;
 }
 
+/**
+  * @brief Try to open device.
+**/
 bool open_device(int* fd, const char* device)
 {
 	*fd = open(device,O_RDWR | O_NOCTTY);

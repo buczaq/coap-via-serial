@@ -8,6 +8,11 @@
 #include "../common/common.h"
 #include "functions.h"
 
+/**
+  * @brief Constantly listen for data on device.
+  * 
+  * @return Data received from server.
+**/
 unsigned char* receive_data(int fd)
 {
 	unsigned char* read_buffer_to_return = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -23,6 +28,11 @@ unsigned char* receive_data(int fd)
 	return read_buffer_to_return;
 }
 
+/**
+  * @brief Process received CoAP message.
+  * 
+  * @return Path to resources referred in server's request.
+**/
 char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data)
 {
 	char* path = (char*)malloc(sizeof(char) * BUFFER_SIZE);
@@ -42,6 +52,11 @@ char* process_coap(unsigned char* buffer, unsigned int length, char* post_payloa
 	return path;
 }
 
+/**
+  * @brief Process CoAP GET request.
+  * 
+  * @return Path to resources referred in server's request.
+**/
 char* process_get(unsigned char* buffer, unsigned int length, struct MessageData* message_data)
 {
 	// assuming that token is 2 bytes long
@@ -97,6 +112,11 @@ char* process_get(unsigned char* buffer, unsigned int length, struct MessageData
 	return get_path;
 }
 
+/**
+  * @brief Process CoAP POST request.
+  * 
+  * @return Path to resources referred in server's request.
+**/
 char* process_post(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data)
 {
 	// assuming that token is 2 bytes long and whole header is 5 bytes
@@ -176,6 +196,9 @@ char* process_post(unsigned char* buffer, unsigned int length, char* post_payloa
 	return post_path;
 }
 
+/**
+  * @brief Get CoAP message parameters (MID, token) and use them when building response.
+**/
 void save_message_parameters(struct MessageData* message_data, unsigned char* message_id, unsigned char* token)
 {
 	message_data->message_id[0] = message_id[0];
@@ -184,26 +207,43 @@ void save_message_parameters(struct MessageData* message_data, unsigned char* me
 	message_data->token[1] = token[1];
 }
 
+/**
+  * @brief Example function for getting resources.
+**/
 int16_t get_temperature_value(struct Resources* resources)
 {
 	return resources->temperature_value;
 }
+
+/**
+  * @brief Example function for getting resources.
+**/
 int16_t get_humidity_value(struct Resources* resources)
 {
 	return resources->humidity_value;
 }
 
+/**
+  * @brief Example function for setting resources.
+**/
 int16_t set_temperature_value(struct Resources* resources, int16_t value)
 {
 	resources->temperature_value = value;
 	return resources->temperature_value;
 }
+
+/**
+  * @brief Example function for setting resources.
+**/
 int16_t set_humidity_value(struct Resources* resources, int16_t value)
 {
 	resources->humidity_value = value;
 	return resources->humidity_value;
 }
 
+/**
+  * @brief Part of GET request processing. Check value under path reffered by server's request and send it via CoAP as a response.
+**/
 void check_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, struct MessageData* message_data)
 {
 	int16_t resource_to_send;
@@ -230,6 +270,9 @@ void check_resources_and_send_response(int fd, unsigned char* message, struct Re
 	free(response);
 }
 
+/**
+  * @brief Part of POST request processing. Set value under path reffered by server's request and send it via CoAP as a response (as a confirmation).
+**/
 void set_resources_and_send_response(int fd, unsigned char* message, struct Resources* resources, char* post_payload, bool DEBUG_FLAG, struct MessageData* message_data)
 {
 	int16_t resource_to_set = (int)strtol(post_payload, (char **)NULL, 10);
@@ -260,6 +303,11 @@ void set_resources_and_send_response(int fd, unsigned char* message, struct Reso
 	free(response);
 }
 
+/**
+  * @brief Build a response and wrap it with shim header.
+  * 
+  * @return CoAP message with a shim sheader.
+**/
 unsigned char* build_coap_response_with_header(struct MessageData* message_data, char* response)
 {
 	unsigned char* message = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
