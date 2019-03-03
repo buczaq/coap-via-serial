@@ -8,19 +8,6 @@
 #include "../common/common.h"
 #include "functions.h"
 
-bool open_device(int* fd, const char* device)
-{
-	*fd = open(device,O_RDWR | O_NOCTTY);
-	if(*fd > 0) {
-		printf("[INF] Device %s opened successfully\n", device);
-		return true;
-	}
-	else {
-		printf("[INF] Error in opening device, aborting...\n");
-		return false;
-	}
-}
-
 unsigned char* receive_data(int fd)
 {
 	unsigned char* read_buffer_to_return = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
@@ -38,21 +25,21 @@ unsigned char* receive_data(int fd)
 
 char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data)
 {
-	unsigned char* message_to_send = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	char* path = (char*)malloc(sizeof(char) * BUFFER_SIZE);
 
 	switch(buffer[1])
 	{
 		case 1:
-			message_to_send = process_get(buffer, length, message_data);
+			path = process_get(buffer, length, message_data);
 			break;
 		case 2:
-			message_to_send = process_post(buffer, length, post_payload, message_data);
+			path = process_post(buffer, length, post_payload, message_data);
 			break;
 		default:
 			break;
 	}
 
-	return message_to_send;
+	return path;
 }
 
 char* process_get(unsigned char* buffer, unsigned int length, struct MessageData* message_data)

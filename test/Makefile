@@ -123,6 +123,33 @@ build/run_tests/fast:
 	$(MAKE) -f CMakeFiles/build/run_tests.dir/build.make CMakeFiles/build/run_tests.dir/build
 .PHONY : build/run_tests/fast
 
+home/buczak/Inzynierka/coap-via-serial/common/common.o: home/buczak/Inzynierka/coap-via-serial/common/common.c.o
+
+.PHONY : home/buczak/Inzynierka/coap-via-serial/common/common.o
+
+# target to build an object file
+home/buczak/Inzynierka/coap-via-serial/common/common.c.o:
+	$(MAKE) -f CMakeFiles/build/run_tests.dir/build.make CMakeFiles/build/run_tests.dir/home/buczak/Inzynierka/coap-via-serial/common/common.c.o
+.PHONY : home/buczak/Inzynierka/coap-via-serial/common/common.c.o
+
+home/buczak/Inzynierka/coap-via-serial/common/common.i: home/buczak/Inzynierka/coap-via-serial/common/common.c.i
+
+.PHONY : home/buczak/Inzynierka/coap-via-serial/common/common.i
+
+# target to preprocess a source file
+home/buczak/Inzynierka/coap-via-serial/common/common.c.i:
+	$(MAKE) -f CMakeFiles/build/run_tests.dir/build.make CMakeFiles/build/run_tests.dir/home/buczak/Inzynierka/coap-via-serial/common/common.c.i
+.PHONY : home/buczak/Inzynierka/coap-via-serial/common/common.c.i
+
+home/buczak/Inzynierka/coap-via-serial/common/common.s: home/buczak/Inzynierka/coap-via-serial/common/common.c.s
+
+.PHONY : home/buczak/Inzynierka/coap-via-serial/common/common.s
+
+# target to generate assembly for a file
+home/buczak/Inzynierka/coap-via-serial/common/common.c.s:
+	$(MAKE) -f CMakeFiles/build/run_tests.dir/build.make CMakeFiles/build/run_tests.dir/home/buczak/Inzynierka/coap-via-serial/common/common.c.s
+.PHONY : home/buczak/Inzynierka/coap-via-serial/common/common.c.s
+
 home/buczak/Inzynierka/coap-via-serial/server/functions.o: home/buczak/Inzynierka/coap-via-serial/server/functions.c.o
 
 .PHONY : home/buczak/Inzynierka/coap-via-serial/server/functions.o
@@ -186,6 +213,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... build/run_tests"
 	@echo "... edit_cache"
+	@echo "... home/buczak/Inzynierka/coap-via-serial/common/common.o"
+	@echo "... home/buczak/Inzynierka/coap-via-serial/common/common.i"
+	@echo "... home/buczak/Inzynierka/coap-via-serial/common/common.s"
 	@echo "... home/buczak/Inzynierka/coap-via-serial/server/functions.o"
 	@echo "... home/buczak/Inzynierka/coap-via-serial/server/functions.i"
 	@echo "... home/buczak/Inzynierka/coap-via-serial/server/functions.s"

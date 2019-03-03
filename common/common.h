@@ -16,5 +16,6 @@ unsigned char* create_message_with_header(unsigned char* buffer);
 unsigned int count_actual_buffer_size(unsigned char* buffer);
 unsigned int count_whole_message_size(unsigned char* buffer);
 unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DEBUG_FLAG);
+bool open_device(int* fd, const char* device);
 
 #endif // _common_H_

@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 		unsigned char* data = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 		unsigned char* coap_msg_raw = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 		unsigned int length = 0;
-		char* coap_msg = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+		unsigned char* coap_msg = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 		unsigned char post_payload[PAYLOAD_SIZE];
 		for(int i = 0; i < PAYLOAD_SIZE; i++) {
 			post_payload[i] = '\0';

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <fcntl.h>
 
 unsigned char* create_message_with_header(unsigned char* buffer)
 {
@@ -89,4 +90,17 @@ unsigned char* data_to_coap(unsigned char* buffer, unsigned int* length, bool DE
 	}
 	printf("[INF] Source: %d.%d\nDestination: %d.%d\n", source[0], source[1], destination[0], destination[1]);
 	return coap_msg;
+}
+
+bool open_device(int* fd, const char* device)
+{
+	*fd = open(device,O_RDWR | O_NOCTTY);
+	if(*fd > 0) {
+		printf("[INF] Device %s opened successfully\n", device);
+		return true;
+	}
+	else {
+		printf("[INF] Error in opening device, aborting...\n");
+		return false;
+	}
 }

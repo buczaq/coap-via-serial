@@ -10,19 +10,6 @@
 
 #include "functions.h"
 
-bool open_device(int* fd, const char* device)
-{
-	*fd = open(device,O_RDWR | O_NOCTTY);
-	if(*fd > 0) {
-		printf("[INF] Device %s opened successfully\n", device);
-		return true;
-	}
-	else {
-		printf("[ERR] Error in opening device, aborting...\n");
-		return false;
-	}
-}
-
 void read_devices_list(struct Device* devices)
 {
 	FILE* fid;
@@ -64,7 +51,7 @@ unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* bu
 	connect(sckt, res->ai_addr, res->ai_addrlen);
 	int write_bytes = write(sckt, buffer, count_whole_message_size(buffer));
 	printf("[INF] Sent %d bytes.\n", write_bytes);
-	char* feed = "\n";
+	char feed[] = "\n";
 	write(sckt, feed, 1);
 
 	char* tmp_buffer;
@@ -72,7 +59,7 @@ unsigned char* send_coap_to_ser2net_port_and_wait_for_response(unsigned char* bu
 	// reading data that has just been sent in order to ignore it
 	read(sckt, tmp_buffer, count_whole_message_size(buffer));
 
-	unsigned char* response = (char*)malloc(sizeof(char) * PAYLOAD_SIZE);
+	unsigned char* response = (unsigned char*)malloc(sizeof(unsigned char) * PAYLOAD_SIZE);
 
 	read(sckt, response, 4);
 
@@ -87,7 +74,7 @@ unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buff
 	int fd;
 
 	if(!open_device(&fd, destination)) {
-		return "";
+		exit(1);
 	}
 
 	fcntl(fd, F_SETFL, 0);
@@ -114,7 +101,7 @@ unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buff
 
 	printf("[INF] Bytes written: %d\n", bytes_written);
 
-	unsigned char* response = (char*)malloc(sizeof(char) * BUFFER_SIZE);
+	unsigned char* response = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
 
 	struct timeval tv;
 	tv.tv_sec = 1;
@@ -138,7 +125,7 @@ unsigned char* send_coap_to_raw_device_and_wait_for_response(unsigned char* buff
 
 char* listen_for_http(int sckt, struct addrinfo* res, int accsckt)
 {
-	unsigned char* buffer = (unsigned char*)malloc(sizeof(unsigned char) * BUFFER_SIZE);
+	char* buffer = (char*)malloc(sizeof(char) * BUFFER_SIZE);
 
 	struct sockaddr_storage src_addr;
 	socklen_t src_addr_len=sizeof(src_addr);
@@ -194,8 +181,8 @@ char* look_for_device(struct Device* devices, char* destination)
 			return devices[i].location;
 		}
 	}
-
-	return "";
+	printf("[ERR] Device %s not found!", destination);
+	exit(1);
 }
 
 unsigned char* process_http_get(char* message, struct Device* devices, char* destination, struct MessageData* message_data)

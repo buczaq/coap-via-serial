@@ -12,7 +12,6 @@ struct Resources {
 	int16_t humidity_value;
 };
 
-bool open_device(int* fd, const char* device);
 unsigned char* receive_data(int fd);
 char* process_coap(unsigned char* buffer, unsigned int length, char* post_payload, struct MessageData* message_data);
 char* process_get(unsigned char* buffer, unsigned int length, struct MessageData* message_data);

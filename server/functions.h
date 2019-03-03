@@ -25,7 +25,6 @@ typedef enum EMessageType
 	POST = 2
 } MessageType;
 
-bool open_device(int* fd, const char* device);
 void read_devices_list(struct Device* devices);
 char* look_for_device(struct Device* devices, char* destination);
 
