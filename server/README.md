@@ -22,3 +22,4 @@ host-address - typically 0.0.0.0, it's just an information that will be filled i
 ```
 (assuming that user is under "server" directory).
 
+"devices.txt" file defines aliases for addresses of the client devices. First column is an alias, second one is an address for a shim header (in practice this parameter doesn't matter) and third one is a path to the device. These aliases are passed to HTTP request sent from user to HTTP server and then to CoAP server. In case of any doubts please read PDF instruction in the main directory in order to get the idea of using these aliases.
